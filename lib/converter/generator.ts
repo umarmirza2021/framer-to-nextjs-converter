@@ -220,7 +220,10 @@ function generateTsConfig(): string {
 }
 
 function generateNetlifyToml(): string {
-  return `[build]
+  return `# Netlify deploy — do NOT set a Publish directory in the Netlify UI.
+# The @netlify/plugin-nextjs plugin manages the output automatically.
+
+[build]
   command = "npm run build"
 
 [[plugins]]
@@ -266,6 +269,17 @@ npm run dev
 \`\`\`
 
 Open [http://localhost:3000](http://localhost:3000) to view the site.
+
+## Deploy to Netlify
+
+1. Push this folder to a GitHub repo (or connect the zip via Netlify).
+2. In Netlify → **Site configuration** → **Build & deploy** → **Build settings**:
+   - **Build command:** \`npm run build\`
+   - **Publish directory:** leave **empty** (do not set \`.\` or \`/\`)
+3. Netlify will use the \`@netlify/plugin-nextjs\` plugin from \`netlify.toml\` automatically.
+4. Click **Clear cache and deploy site**.
+
+> If you see "publish directory cannot be the same as the base directory", your Publish directory is set incorrectly — clear it and redeploy.
 
 ## Notes
 
