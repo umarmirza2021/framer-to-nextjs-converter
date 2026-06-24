@@ -179,6 +179,7 @@ function generatePackageJson(siteName: string): string {
         "react-dom": "^19.0.0",
       },
       devDependencies: {
+        "@netlify/plugin-nextjs": "^5.15.0",
         "@types/node": "^22.10.0",
         "@types/react": "^19.0.0",
         "@types/react-dom": "^19.0.0",
@@ -220,11 +221,10 @@ function generateTsConfig(): string {
 }
 
 function generateNetlifyToml(): string {
-  return `# Netlify deploy — do NOT set a Publish directory in the Netlify UI.
-# The @netlify/plugin-nextjs plugin manages the output automatically.
-
+  return `# Overrides Netlify UI publish-dir (zip deploys default to repo root, which breaks the plugin).
 [build]
   command = "npm run build"
+  publish = ".next"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
@@ -272,14 +272,16 @@ Open [http://localhost:3000](http://localhost:3000) to view the site.
 
 ## Deploy to Netlify
 
-1. Push this folder to a GitHub repo (or connect the zip via Netlify).
-2. In Netlify → **Site configuration** → **Build & deploy** → **Build settings**:
-   - **Build command:** \`npm run build\`
-   - **Publish directory:** leave **empty** (do not set \`.\` or \`/\`)
-3. Netlify will use the \`@netlify/plugin-nextjs\` plugin from \`netlify.toml\` automatically.
-4. Click **Clear cache and deploy site**.
+**Recommended:** push this folder to GitHub and connect it in Netlify (SSR + route handlers need the Next.js plugin).
 
-> If you see "publish directory cannot be the same as the base directory", your Publish directory is set incorrectly — clear it and redeploy.
+1. Create a GitHub repo and push these files.
+2. In Netlify → **Add new site** → **Import from Git** → select the repo.
+3. Build settings are read from \`netlify.toml\` automatically (\`publish = ".next"\`).
+4. Click **Deploy site**.
+
+**If deploying a zip:** ensure \`netlify.toml\` contains \`publish = ".next"\` (not \`.\` or empty pointing to root). Then upload the zip and redeploy.
+
+> Error "publish directory cannot be the same as the base directory"? Your \`netlify.toml\` is missing \`publish = ".next"\` — add it and redeploy.
 
 ## Notes
 
