@@ -3,7 +3,7 @@
 import { useState } from "react";
 import styles from "./ConverterForm.module.css";
 
-type Status = "idle" | "converting" | "success" | "error";
+type Status = "idle" | "converting" | "preview" | "error";
 
 interface ConvertStats {
   pages: number;
@@ -16,6 +16,10 @@ export default function ConverterForm() {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
   const [stats, setStats] = useState<ConvertStats | null>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
+  const [siteName, setSiteName] = useState("");
+  const [downloading, setDownloading] = useState(false);
 
   async function handleConvert(e: React.FormEvent) {
     e.preventDefault();
@@ -24,33 +28,50 @@ export default function ConverterForm() {
     setStatus("converting");
     setError("");
     setStats(null);
+    setPreviewId(null);
+    setTitle("");
+    setSiteName("");
 
     try {
-      const response = await fetch("/api/convert", {
+      const response = await fetch("/api/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: url.trim() }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const data = await response.json();
         throw new Error(data.error || data.hint || "Conversion failed");
       }
 
+      setStats(data.stats);
+      setPreviewId(data.previewId);
+      setTitle(data.title);
+      setSiteName(data.siteName);
+      setStatus("preview");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      setStatus("error");
+    }
+  }
+
+  async function handleDownload() {
+    if (!previewId) return;
+
+    setDownloading(true);
+    try {
+      const response = await fetch(`/api/download/${previewId}`);
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Download failed");
+      }
+
       const blob = await response.blob();
-      const pages = response.headers.get("X-Pages-Converted");
-      const assets = response.headers.get("X-Assets-Downloaded");
-      const cssSize = response.headers.get("X-CSS-Size");
-
-      setStats({
-        pages: pages ? parseInt(pages, 10) : 1,
-        assets: assets ? parseInt(assets, 10) : 0,
-        cssSize: cssSize ? parseInt(cssSize, 10) : 0,
-      });
-
       const disposition = response.headers.get("Content-Disposition");
       const filenameMatch = disposition?.match(/filename="(.+)"/);
-      const filename = filenameMatch?.[1] || "framer-nextjs.zip";
+      const filename = filenameMatch?.[1] || `${siteName || "framer"}-nextjs.zip`;
 
       const downloadUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -60,16 +81,18 @@ export default function ConverterForm() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(downloadUrl);
-
-      setStatus("success");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : "Download failed");
       setStatus("error");
+    } finally {
+      setDownloading(false);
     }
   }
 
+  const showPreview = status === "preview" && previewId;
+
   return (
-    <div className={styles.converter}>
+    <div className={`${styles.converter} ${showPreview ? styles.expanded : ""}`}>
       <form onSubmit={handleConvert} className={styles.converterForm}>
         <div className={styles.inputGroup}>
           <input
@@ -92,7 +115,7 @@ export default function ConverterForm() {
                 Converting…
               </>
             ) : (
-              "Convert to Next.js"
+              "Preview Site"
             )}
           </button>
         </div>
@@ -109,21 +132,59 @@ export default function ConverterForm() {
         </div>
       )}
 
-      {status === "success" && stats && (
-        <div className={`${styles.statusCard} ${styles.success}`}>
-          <div className={styles.statusIcon}>✓</div>
-          <div>
-            <p className={styles.statusTitle}>Conversion complete!</p>
-            <p className={styles.statusDetail}>
-              {stats.pages} page{stats.pages !== 1 ? "s" : ""} · {stats.assets} asset
-              {stats.assets !== 1 ? "s" : ""} · {(stats.cssSize / 1024).toFixed(0)} KB CSS
-            </p>
-            <p className={styles.statusHint}>
-              Zip downloaded to your Downloads folder. Unzip it, then deploy:
-            </p>
-            <p className={styles.statusHint}>
-              <code>npm install</code> → <code>npm run dev</code> (local) or push to Vercel/Netlify
-            </p>
+      {showPreview && stats && (
+        <div className={styles.previewSection}>
+          <div className={`${styles.statusCard} ${styles.success}`}>
+            <div className={styles.statusIcon}>✓</div>
+            <div className={styles.previewHeader}>
+              <p className={styles.statusTitle}>
+                {title ? `Preview: ${title}` : "Preview ready"}
+              </p>
+              <p className={styles.statusDetail}>
+                {stats.pages} page{stats.pages !== 1 ? "s" : ""} · {stats.assets} asset
+                {stats.assets !== 1 ? "s" : ""} · {(stats.cssSize / 1024).toFixed(0)} KB CSS
+              </p>
+              <div className={styles.previewActions}>
+                <button
+                  type="button"
+                  className={styles.downloadBtn}
+                  onClick={handleDownload}
+                  disabled={downloading}
+                >
+                  {downloading ? (
+                    <>
+                      <span className={styles.spinner} />
+                      Downloading…
+                    </>
+                  ) : (
+                    "Download Next.js Project"
+                  )}
+                </button>
+                <a
+                  href={`/api/preview/${previewId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.openTabLink}
+                >
+                  Open in new tab
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.previewFrameWrap}>
+            <div className={styles.previewFrameHeader}>
+              <span className={styles.previewDot} />
+              <span className={styles.previewDot} />
+              <span className={styles.previewDot} />
+              <span className={styles.previewUrl}>Live preview</span>
+            </div>
+            <iframe
+              src={`/api/preview/${previewId}`}
+              title="Converted site preview"
+              className={styles.previewFrame}
+              sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+            />
           </div>
         </div>
       )}

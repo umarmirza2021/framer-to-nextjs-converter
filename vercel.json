@@ -3,6 +3,9 @@
   "functions": {
     "app/api/convert/route.ts": {
       "maxDuration": 60
+    },
+    "app/api/preview/route.ts": {
+      "maxDuration": 60
     }
   }
 }

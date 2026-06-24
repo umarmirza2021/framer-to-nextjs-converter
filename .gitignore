@@ -2,8 +2,11 @@ node_modules/
 .next/
 out/
 *.zip
+portfolio-v3/
 portfolioz*/
 preview-site/
+*-site/
+*-nextjs/
 .env
 .env.local
 .DS_Store

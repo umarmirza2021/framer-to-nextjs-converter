@@ -54,7 +54,7 @@ function escapeScriptContent(value: string): string {
   return value.replace(/<\/script>/gi, "<\\/script>");
 }
 
-function buildHtmlDocument(page: FramerPage, site: FramerSite): string {
+export function buildHtmlDocument(page: FramerPage, site: FramerSite): string {
   const hydrateAttr = escapeHtmlAttr(
     JSON.stringify(page.hydrateData || { routeId: page.routeId || "", localeId: "default" })
   );

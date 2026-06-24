@@ -9,3 +9,7 @@
 
 [functions]
   node_bundler = "esbuild"
+
+# Conversion APIs can take up to 60s on large Framer sites
+[functions."*"]
+  timeout = 60

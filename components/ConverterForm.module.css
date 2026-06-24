@@ -3,6 +3,10 @@
   max-width: 640px;
 }
 
+.converter.expanded {
+  max-width: 100%;
+}
+
 .converterForm {
   width: 100%;
 }
@@ -191,6 +195,110 @@
   }
 }
 
+.previewSection {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.previewHeader {
+  flex: 1;
+}
+
+.previewActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.downloadBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s;
+}
+
+.downloadBtn:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.downloadBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.openTabLink {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.openTabLink:hover {
+  color: var(--accent);
+}
+
+.previewFrameWrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.previewFrameHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: var(--surface-hover);
+  border-bottom: 1px solid var(--border);
+}
+
+.previewDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.previewDot:first-child {
+  background: #ff6b6b;
+}
+
+.previewDot:nth-child(2) {
+  background: #ffd93d;
+}
+
+.previewDot:nth-child(3) {
+  background: #00d2a0;
+}
+
+.previewUrl {
+  margin-left: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.previewFrame {
+  width: 100%;
+  height: min(70vh, 600px);
+  border: none;
+  display: block;
+  background: white;
+}
+
 @media (max-width: 600px) {
   .inputGroup {
     flex-direction: column;
@@ -198,5 +306,9 @@
 
   .convertBtn {
     justify-content: center;
+  }
+
+  .previewFrame {
+    height: min(60vh, 480px);
   }
 }

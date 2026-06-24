@@ -15,6 +15,10 @@ const features = [
     desc: "Images and media are downloaded locally into public/assets/.",
   },
   {
+    title: "Live preview",
+    desc: "See the converted site in your browser before downloading — animations and layout included.",
+  },
+  {
     title: "Deploy-ready zip",
     desc: "Downloads a complete Next.js project — unzip, npm install, and deploy to Vercel or Netlify.",
   },
@@ -57,6 +61,9 @@ export default function Home() {
           </li>
           <li>
             <strong>Convert</strong> — Builds a pure HTML Next.js route with full Framer animations
+          </li>
+          <li>
+            <strong>Preview</strong> — Opens a live browser preview so you can check the result first
           </li>
           <li>
             <strong>Download</strong> — Saves a zip with everything you need to deploy
