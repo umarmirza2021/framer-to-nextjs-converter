@@ -1,0 +1,7 @@
+# Converted Framer site outputs — not part of the converter app
+portfolio-v3/
+portfolioz*/
+preview-site/
+*-site/
+*-nextjs/
+*.zip

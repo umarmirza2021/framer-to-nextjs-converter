@@ -138,8 +138,18 @@ function generateDocumentModule(docName: string, page: FramerPage, site: FramerS
   return `export const framerHtml = ${JSON.stringify(html)};\n`;
 }
 
-function generateRouteHandler(docName: string): string {
-  return `import { framerHtml } from "@/lib/framer/${docName}";
+function relativeImportPath(pagePath: string, docName: string): string {
+  const segments =
+    pagePath === "/" || pagePath === ""
+      ? 0
+      : pagePath.replace(/^\//, "").replace(/\/$/, "").split("/").length;
+  const prefix = "../".repeat(segments + 1);
+  return `${prefix}lib/framer/${docName}`;
+}
+
+function generateRouteHandler(docName: string, pagePath: string): string {
+  const importPath = relativeImportPath(pagePath, docName);
+  return `import { framerHtml } from "${importPath}";
 
 export async function GET() {
   return new Response(framerHtml, {
@@ -198,6 +208,7 @@ function generateTsConfig(): string {
         jsx: "preserve",
         incremental: true,
         plugins: [{ name: "next" }],
+        baseUrl: ".",
         paths: { "@/*": ["./*"] },
       },
       include: ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
@@ -206,6 +217,18 @@ function generateTsConfig(): string {
     null,
     2
   );
+}
+
+function generateNetlifyToml(): string {
+  return `[build]
+  command = "npm run build"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[build.environment]
+  NODE_VERSION = "20"
+`;
 }
 
 function generateNextConfig(): string {
@@ -283,6 +306,7 @@ export async function generateNextJsProject(
 
   files["package.json"] = generatePackageJson(siteName);
   files["tsconfig.json"] = generateTsConfig();
+  files["netlify.toml"] = generateNetlifyToml();
   files["next.config.ts"] = generateNextConfig();
   files["next-env.d.ts"] = '/// <reference types="next" />\n/// <reference types="next/image-types/global" />\n';
   files["app/layout.tsx"] = generateLayout();
@@ -297,7 +321,7 @@ export async function generateNextJsProject(
       page.path === "/" || page.path === ""
         ? "app/route.ts"
         : `app/${page.path.replace(/^\//, "").replace(/\/$/, "")}/route.ts`
-    ] = generateRouteHandler(docName);
+    ] = generateRouteHandler(docName, page.path);
   }
 
   return files;
