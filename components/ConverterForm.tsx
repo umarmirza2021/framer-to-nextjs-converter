@@ -39,16 +39,31 @@ export default function ConverterForm() {
         body: JSON.stringify({ url: url.trim() }),
       });
 
-      const data = await response.json();
+      const raw = await response.text();
+      let data: { error?: string; hint?: string; previewId?: string; stats?: ConvertStats; title?: string; siteName?: string };
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        const snippet = raw.replace(/\s+/g, " ").trim().slice(0, 120);
+        throw new Error(
+          response.ok
+            ? "Server returned an invalid response. Try again."
+            : `Server error (${response.status}): ${snippet || "non-JSON response"}`
+        );
+      }
 
       if (!response.ok) {
         throw new Error(data.error || data.hint || "Conversion failed");
       }
 
+      if (!data.previewId || !data.stats) {
+        throw new Error("Server returned an incomplete response. Try again.");
+      }
+
       setStats(data.stats);
       setPreviewId(data.previewId);
-      setTitle(data.title);
-      setSiteName(data.siteName);
+      setTitle(data.title || "");
+      setSiteName(data.siteName || "");
       setStatus("preview");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -64,8 +79,16 @@ export default function ConverterForm() {
       const response = await fetch(`/api/download/${previewId}`);
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Download failed");
+        const raw = await response.text();
+        let message = "Download failed";
+        try {
+          const data = JSON.parse(raw) as { error?: string };
+          if (data.error) message = data.error;
+        } catch {
+          const snippet = raw.replace(/\s+/g, " ").trim().slice(0, 120);
+          message = `Download failed (${response.status}): ${snippet || "unknown error"}`;
+        }
+        throw new Error(message);
       }
 
       const blob = await response.blob();

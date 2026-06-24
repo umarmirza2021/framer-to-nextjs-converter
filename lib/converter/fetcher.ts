@@ -60,11 +60,26 @@ export async function fetchSearchIndex(url: string): Promise<string[]> {
       headers: { "User-Agent": USER_AGENT },
     });
     if (!response.ok) return [];
-    const data = await response.json();
-    if (!Array.isArray(data)) return [];
-    return data
-      .filter((item: { path?: string }) => item.path)
-      .map((item: { path: string }) => item.path);
+
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.includes("json")) return [];
+
+    const text = await response.text();
+    const data = JSON.parse(text) as unknown;
+
+    if (Array.isArray(data)) {
+      return data
+        .filter((item: { path?: string }) => item.path)
+        .map((item: { path: string }) => item.path);
+    }
+
+    if (data && typeof data === "object") {
+      return Object.keys(data as Record<string, unknown>).filter((p) =>
+        p.startsWith("/")
+      );
+    }
+
+    return [];
   } catch {
     return [];
   }

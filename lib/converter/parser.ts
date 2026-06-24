@@ -165,11 +165,21 @@ export async function parseFramerSite(inputUrl: string): Promise<FramerSite> {
   ];
 
   const searchIndexUrl = extractSearchIndexUrl($);
+  const searchIndexFallback = $('meta[name="framer-search-index-fallback"]').attr(
+    "content"
+  );
+  let indexPaths: string[] = [];
   if (searchIndexUrl) {
-    const paths = await fetchSearchIndex(searchIndexUrl);
+    indexPaths = await fetchSearchIndex(searchIndexUrl);
+  }
+  if (!indexPaths.length && searchIndexFallback) {
+    indexPaths = await fetchSearchIndex(searchIndexFallback);
+  }
+
+  if (indexPaths.length) {
     const origin = new URL(baseUrl).origin;
 
-    for (const pagePath of paths) {
+    for (const pagePath of indexPaths) {
       if (pagePath === "/" || pagePath === "") continue;
 
       try {
