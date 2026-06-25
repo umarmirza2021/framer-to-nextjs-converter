@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { convertAndZip, isFramerUrl, normalizeFramerUrl } from "@/lib/converter";
+import {
+  convertAndZip,
+  isFramerUrl,
+  normalizeFramerUrl,
+  type Platform,
+} from "@/lib/converter";
 
 export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { url } = body;
+    const { url, platform: rawPlatform } = body;
 
     if (!url || typeof url !== "string") {
-      return NextResponse.json({ error: "Please provide a Framer site URL." }, { status: 400 });
+      return NextResponse.json({ error: "Please provide a site URL." }, { status: 400 });
     }
 
     let normalizedUrl: string;
@@ -23,7 +28,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid URL format." }, { status: 400 });
     }
 
-    const { zip, stats, siteName } = await convertAndZip(normalizedUrl);
+    const platform: Platform | "auto" =
+      rawPlatform === "framer" || rawPlatform === "webflow" ? rawPlatform : "auto";
+
+    const { zip, stats, siteName } = await convertAndZip(normalizedUrl, { platform });
 
     return new NextResponse(new Uint8Array(zip), {
       status: 200,

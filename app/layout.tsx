@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Framer to Next.js Converter",
-  description: "Convert any Framer website into a downloadable Next.js project in seconds.",
+  title: "Framer & Webflow to Next.js Converter",
+  description:
+    "Convert Framer and Webflow websites into downloadable Next.js projects in seconds.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -4,6 +4,7 @@ import { useState } from "react";
 import styles from "./ConverterForm.module.css";
 
 type Status = "idle" | "converting" | "preview" | "error";
+type Platform = "auto" | "framer" | "webflow";
 
 interface ConvertStats {
   pages: number;
@@ -11,8 +12,22 @@ interface ConvertStats {
   cssSize: number;
 }
 
+const PLATFORM_LABELS: Record<Platform, string> = {
+  auto: "Auto-detect",
+  framer: "Framer",
+  webflow: "Webflow",
+};
+
+const PLATFORM_PLACEHOLDERS: Record<Platform, string> = {
+  auto: "yoursite.com or yoursite.framer.website",
+  framer: "yoursite.framer.website",
+  webflow: "www.yoursite.com",
+};
+
 export default function ConverterForm() {
   const [url, setUrl] = useState("");
+  const [platform, setPlatform] = useState<Platform>("auto");
+  const [detectedPlatform, setDetectedPlatform] = useState<string>("");
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
   const [stats, setStats] = useState<ConvertStats | null>(null);
@@ -31,16 +46,25 @@ export default function ConverterForm() {
     setPreviewId(null);
     setTitle("");
     setSiteName("");
+    setDetectedPlatform("");
 
     try {
       const response = await fetch("/api/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url.trim() }),
+        body: JSON.stringify({ url: url.trim(), platform }),
       });
 
       const raw = await response.text();
-      let data: { error?: string; hint?: string; previewId?: string; stats?: ConvertStats; title?: string; siteName?: string };
+      let data: {
+        error?: string;
+        hint?: string;
+        previewId?: string;
+        stats?: ConvertStats;
+        title?: string;
+        siteName?: string;
+        platform?: string;
+      };
       try {
         data = JSON.parse(raw);
       } catch {
@@ -64,6 +88,7 @@ export default function ConverterForm() {
       setPreviewId(data.previewId);
       setTitle(data.title || "");
       setSiteName(data.siteName || "");
+      setDetectedPlatform(data.platform || "");
       setStatus("preview");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -94,7 +119,7 @@ export default function ConverterForm() {
       const blob = await response.blob();
       const disposition = response.headers.get("Content-Disposition");
       const filenameMatch = disposition?.match(/filename="(.+)"/);
-      const filename = filenameMatch?.[1] || `${siteName || "framer"}-nextjs.zip`;
+      const filename = filenameMatch?.[1] || `${siteName || "site"}-nextjs.zip`;
 
       const downloadUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -113,16 +138,34 @@ export default function ConverterForm() {
   }
 
   const showPreview = status === "preview" && previewId;
+  const platformName =
+    platform === "auto"
+      ? detectedPlatform || "site"
+      : platform;
 
   return (
     <div className={`${styles.converter} ${showPreview ? styles.expanded : ""}`}>
       <form onSubmit={handleConvert} className={styles.converterForm}>
+        <div className={styles.platformTabs}>
+          {(Object.keys(PLATFORM_LABELS) as Platform[]).map((key) => (
+            <button
+              key={key}
+              type="button"
+              className={`${styles.platformTab} ${platform === key ? styles.platformTabActive : ""}`}
+              onClick={() => setPlatform(key)}
+              disabled={status === "converting"}
+            >
+              {PLATFORM_LABELS[key]}
+            </button>
+          ))}
+        </div>
+
         <div className={styles.inputGroup}>
           <input
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="yoursite.framer.website"
+            placeholder={PLATFORM_PLACEHOLDERS[platform]}
             className={styles.urlInput}
             disabled={status === "converting"}
             required
@@ -147,7 +190,9 @@ export default function ConverterForm() {
       {status === "converting" && (
         <div className={styles.statusCard}>
           <div className={styles.statusSteps}>
-            <div className={`${styles.step} ${styles.active}`}>Fetching Framer site</div>
+            <div className={`${styles.step} ${styles.active}`}>
+              Fetching {platform === "webflow" ? "Webflow" : platform === "framer" ? "Framer" : ""} site
+            </div>
             <div className={`${styles.step} ${styles.active}`}>Extracting styles &amp; HTML</div>
             <div className={styles.step}>Downloading assets</div>
             <div className={styles.step}>Generating Next.js project</div>
@@ -164,6 +209,9 @@ export default function ConverterForm() {
                 {title ? `Preview: ${title}` : "Preview ready"}
               </p>
               <p className={styles.statusDetail}>
+                {detectedPlatform && (
+                  <span className={styles.platformBadge}>{detectedPlatform}</span>
+                )}
                 {stats.pages} page{stats.pages !== 1 ? "s" : ""} · {stats.assets} asset
                 {stats.assets !== 1 ? "s" : ""} · {(stats.cssSize / 1024).toFixed(0)} KB CSS
               </p>
@@ -200,7 +248,7 @@ export default function ConverterForm() {
               <span className={styles.previewDot} />
               <span className={styles.previewDot} />
               <span className={styles.previewDot} />
-              <span className={styles.previewUrl}>Live preview</span>
+              <span className={styles.previewUrl}>Live preview · {platformName}</span>
             </div>
             <iframe
               src={`/api/preview/${previewId}`}
