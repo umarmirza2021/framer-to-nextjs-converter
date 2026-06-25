@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "desktop": "next dev -p 3847",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "build": "node scripts/verify-env.mjs && prisma generate && prisma migrate deploy && next build",
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint",
