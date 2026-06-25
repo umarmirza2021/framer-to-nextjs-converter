@@ -1,3 +1,8 @@
+# Required runtime env vars (Netlify UI → Site settings → Environment variables):
+#   DATABASE_URL  — PostgreSQL connection string (Neon: https://neon.tech)
+#   AUTH_SECRET   — openssl rand -base64 32
+#   AUTH_URL      — https://your-site.netlify.app
+
 [build]
   command = "npm run build"
 
