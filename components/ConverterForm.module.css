@@ -299,6 +299,30 @@
   background: white;
 }
 
+.downloadError {
+  margin: 12px 0 0;
+  color: var(--error);
+  font-size: 14px;
+}
+
+.savedBadge {
+  color: var(--success);
+}
+
+.dashboardLink {
+  margin: 8px 0 0;
+  font-size: 14px;
+}
+
+.dashboardLink a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.dashboardLink a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 600px) {
   .inputGroup {
     flex-direction: column;

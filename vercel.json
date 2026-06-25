@@ -9,6 +9,12 @@
     },
     "app/api/download/[id]/route.ts": {
       "maxDuration": 60
+    },
+    "app/api/projects/[id]/deploy/route.ts": {
+      "maxDuration": 120
+    },
+    "app/api/uploads/route.ts": {
+      "maxDuration": 60
     }
   }
 }

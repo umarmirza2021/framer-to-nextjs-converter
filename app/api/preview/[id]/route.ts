@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const html = getPreviewHtml(id);
+  const html = await getPreviewHtml(id);
 
   if (!html) {
     return NextResponse.json(

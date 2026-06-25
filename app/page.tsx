@@ -1,5 +1,5 @@
 import ConverterForm from "@/components/ConverterForm";
-import styles from "./page.module.css";
+import Header from "@/components/Header";
 
 const features = [
   {
@@ -26,57 +26,59 @@ const features = [
 
 export default function Home() {
   return (
-    <main className={styles.page}>
-      <header className={styles.hero}>
-        <div className={styles.badge}>Framer → Next.js</div>
-        <h1 className={styles.title}>
-          Convert Framer sites
-          <br />
-          to <span className={styles.gradient}>Next.js</span>
-        </h1>
-        <p className={styles.subtitle}>
-          Paste your Framer URL and get a ready-to-run Next.js project — pages, styles, assets, and
-          animations included.
-        </p>
-        <ConverterForm />
-      </header>
+    <>
+      <Header />
+      <main className="ftn-page">
+        <header className="ftn-hero">
+          <h1 className="ftn-title">
+            Convert Framer sites
+            <br />
+            to <span className="ftn-gradient">Next.js</span>
+          </h1>
+          <p className="ftn-subtitle">
+            Paste your Framer URL and get a ready-to-run Next.js project — pages, styles, assets, and
+            animations included.
+          </p>
+          <ConverterForm />
+        </header>
 
-      <section className={styles.features}>
-        {features.map((f) => (
-          <div key={f.title} className={styles.featureCard}>
-            <h3>{f.title}</h3>
-            <p>{f.desc}</p>
-          </div>
-        ))}
-      </section>
+        <section className="ftn-features">
+          {features.map((f) => (
+            <div key={f.title} className="ftn-feature-card">
+              <h3>{f.title}</h3>
+              <p>{f.desc}</p>
+            </div>
+          ))}
+        </section>
 
-      <section className={styles.howItWorks}>
-        <h2>How it works</h2>
-        <ol>
-          <li>
-            <strong>Fetch</strong> — Downloads your published Framer site HTML
-          </li>
-          <li>
-            <strong>Parse</strong> — Extracts SSR content, CSS, meta data, and page routes
-          </li>
-          <li>
-            <strong>Convert</strong> — Builds a pure HTML Next.js route with full Framer animations
-          </li>
-          <li>
-            <strong>Preview</strong> — Opens a live browser preview so you can check the result first
-          </li>
-          <li>
-            <strong>Download</strong> — Saves a zip with everything you need to deploy
-          </li>
-        </ol>
-      </section>
+        <section className="ftn-how-it-works">
+          <h2>How it works</h2>
+          <ol>
+            <li>
+              <strong>Fetch</strong> — Downloads your published Framer site HTML
+            </li>
+            <li>
+              <strong>Parse</strong> — Extracts SSR content, CSS, meta data, and page routes
+            </li>
+            <li>
+              <strong>Convert</strong> — Builds a pure HTML Next.js route with full Framer animations
+            </li>
+            <li>
+              <strong>Preview</strong> — Opens a live browser preview so you can check the result first
+            </li>
+            <li>
+              <strong>Download</strong> — Saves a zip with everything you need to deploy
+            </li>
+          </ol>
+        </section>
 
-      <footer className={styles.footer}>
-        <p>
-          Works with <code>*.framer.website</code> URLs. Custom domains supported when they resolve to
-          Framer.
-        </p>
-      </footer>
-    </main>
+        <footer className="ftn-footer">
+          <p>
+            Works with <code>*.framer.website</code> URLs. Custom domains supported when they resolve to
+            Framer.
+          </p>
+        </footer>
+      </main>
+    </>
   );
 }

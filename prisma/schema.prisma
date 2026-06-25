@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ProjectStatus: DRAFT | READY | DEPLOYED
+// CmsFieldType: PLAIN_TEXT | FORMATTED_TEXT | DATE | LINK | IMAGE | GALLERY | COLOR | TOGGLE | NUMBER | OPTION | FILE | VECTOR_SET | REFERENCE | MULTI_REFERENCE | DIVIDER
+// Platform: NETLIFY | VERCEL
+// DeploymentStatus: PENDING | BUILDING | READY | FAILED
+
+model User {
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  passwordHash       String
+  name               String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  projects           Project[]
+  deploymentAccounts DeploymentAccount[]
+}
+
+model Project {
+  id             String          @id @default(cuid())
+  userId         String
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  framerUrl      String
+  title          String
+  siteName       String
+  status         String          @default("READY")
+  stats          String
+  filesJson      String
+  previewHtml    String
+  cacheId        String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  cmsCollections CmsCollection[]
+  deployments    Deployment[]
+
+  @@index([userId])
+}
+
+model CmsCollection {
+  id        String     @id @default(cuid())
+  projectId String
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name      String
+  slug      String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  fields    CmsField[]
+  entries   CmsEntry[]
+
+  @@unique([projectId, slug])
+}
+
+model CmsField {
+  id              String        @id @default(cuid())
+  collectionId    String
+  collection      CmsCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  name            String
+  slug            String
+  type            String
+  required        Boolean       @default(false)
+  options         String?
+  refCollectionId String?
+  sortOrder       Int           @default(0)
+
+  @@unique([collectionId, slug])
+}
+
+model CmsEntry {
+  id           String        @id @default(cuid())
+  collectionId String
+  collection   CmsCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  slug         String
+  values       String
+  published    Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([collectionId, slug])
+}
+
+model DeploymentAccount {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform    String
+  accessToken String
+  accountName String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, platform])
+}
+
+model Deployment {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  platform  String
+  url       String?
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

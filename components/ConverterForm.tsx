@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import styles from "./ConverterForm.module.css";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+
 
 type Status = "idle" | "converting" | "preview" | "error";
 
@@ -11,7 +13,22 @@ interface ConvertStats {
   cssSize: number;
 }
 
+interface CmsPreviewInfo {
+  status: "found" | "no_cms" | "parse_failed";
+  message: string;
+  collectionCount: number;
+  fieldCount: number;
+  entryCount: number;
+  collections: Array<{
+    name: string;
+    fieldCount: number;
+    entryCount: number;
+    fields: string[];
+  }>;
+}
+
 export default function ConverterForm() {
+  const { data: session } = useSession();
   const [url, setUrl] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
@@ -20,6 +37,10 @@ export default function ConverterForm() {
   const [title, setTitle] = useState("");
   const [siteName, setSiteName] = useState("");
   const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState("");
+  const [savedProjectId, setSavedProjectId] = useState<string | null>(null);
+  const [saveMessage, setSaveMessage] = useState("");
+  const [cmsInfo, setCmsInfo] = useState<CmsPreviewInfo | null>(null);
 
   async function handleConvert(e: React.FormEvent) {
     e.preventDefault();
@@ -31,6 +52,9 @@ export default function ConverterForm() {
     setPreviewId(null);
     setTitle("");
     setSiteName("");
+    setSavedProjectId(null);
+    setSaveMessage("");
+    setCmsInfo(null);
 
     try {
       const response = await fetch("/api/preview", {
@@ -40,7 +64,15 @@ export default function ConverterForm() {
       });
 
       const raw = await response.text();
-      let data: { error?: string; hint?: string; previewId?: string; stats?: ConvertStats; title?: string; siteName?: string };
+      let data: {
+        error?: string;
+        hint?: string;
+        previewId?: string;
+        stats?: ConvertStats;
+        title?: string;
+        siteName?: string;
+        cms?: CmsPreviewInfo;
+      };
       try {
         data = JSON.parse(raw);
       } catch {
@@ -72,7 +104,35 @@ export default function ConverterForm() {
       setPreviewId(data.previewId);
       setTitle(data.title || "");
       setSiteName(data.siteName || "");
+      setCmsInfo(data.cms ?? null);
       setStatus("preview");
+
+      if (session?.user) {
+        try {
+          const saveRes = await fetch("/api/projects", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              framerUrl: url.trim(),
+              previewId: data.previewId,
+              title: data.title,
+              siteName: data.siteName,
+              stats: data.stats,
+            }),
+          });
+          const saveData = await saveRes.json();
+          if (saveRes.ok && saveData.project?.id) {
+            setSavedProjectId(saveData.project.id);
+            const cmsNote =
+              saveData.cmsCollectionsCreated > 0
+                ? ` · ${saveData.cmsCollectionsCreated} CMS collection(s) auto-created`
+                : "";
+            setSaveMessage(`Saved to your dashboard${cmsNote}`);
+          }
+        } catch {
+          setSaveMessage("Preview ready — could not save to dashboard");
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setStatus("error");
@@ -83,6 +143,7 @@ export default function ConverterForm() {
     if (!previewId) return;
 
     setDownloading(true);
+    setDownloadError("");
     try {
       const response = await fetch(`/api/download/${previewId}`);
 
@@ -113,8 +174,7 @@ export default function ConverterForm() {
       document.body.removeChild(a);
       URL.revokeObjectURL(downloadUrl);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Download failed");
-      setStatus("error");
+      setDownloadError(err instanceof Error ? err.message : "Download failed");
     } finally {
       setDownloading(false);
     }
@@ -123,26 +183,26 @@ export default function ConverterForm() {
   const showPreview = status === "preview" && previewId;
 
   return (
-    <div className={`${styles.converter} ${showPreview ? styles.expanded : ""}`}>
-      <form onSubmit={handleConvert} className={styles.converterForm}>
-        <div className={styles.inputGroup}>
+    <div className={`ftn-converter${showPreview ? " ftn-converter--expanded" : ""}`}>
+      <form onSubmit={handleConvert} className="ftn-converter-form">
+        <div className="ftn-input-group">
           <input
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="yoursite.framer.website"
-            className={styles.urlInput}
+            className="ftn-url-input"
             disabled={status === "converting"}
             required
           />
           <button
             type="submit"
-            className={styles.convertBtn}
+            className="ftn-convert-btn"
             disabled={status === "converting" || !url.trim()}
           >
             {status === "converting" ? (
               <>
-                <span className={styles.spinner} />
+                <span className="ftn-spinner" />
                 Converting…
               </>
             ) : (
@@ -153,38 +213,51 @@ export default function ConverterForm() {
       </form>
 
       {status === "converting" && (
-        <div className={styles.statusCard}>
-          <div className={styles.statusSteps}>
-            <div className={`${styles.step} ${styles.active}`}>Fetching Framer site</div>
-            <div className={`${styles.step} ${styles.active}`}>Extracting styles &amp; HTML</div>
-            <div className={styles.step}>Downloading assets</div>
-            <div className={styles.step}>Generating Next.js project</div>
+        <div className="ftn-status-card">
+          <div className="ftn-status-steps">
+            <div className="ftn-step ftn-step--active">Fetching Framer site</div>
+            <div className="ftn-step ftn-step--active">Extracting styles &amp; HTML</div>
+            <div className="ftn-step">Downloading assets</div>
+            <div className="ftn-step">Generating Next.js project</div>
           </div>
         </div>
       )}
 
       {showPreview && stats && (
-        <div className={styles.previewSection}>
-          <div className={`${styles.statusCard} ${styles.success}`}>
-            <div className={styles.statusIcon}>✓</div>
-            <div className={styles.previewHeader}>
-              <p className={styles.statusTitle}>
+        <div className="ftn-preview-section">
+          <div className="ftn-status-card ftn-status-card--success">
+            <div className="ftn-status-icon">✓</div>
+            <div className="ftn-preview-header">
+              <p className="ftn-status-title">
                 {title ? `Preview: ${title}` : "Preview ready"}
               </p>
-              <p className={styles.statusDetail}>
+              <p className="ftn-status-detail">
                 {stats.pages} page{stats.pages !== 1 ? "s" : ""} · {stats.assets} asset
                 {stats.assets !== 1 ? "s" : ""} · {(stats.cssSize / 1024).toFixed(0)} KB CSS
+                {saveMessage && (
+                  <>
+                    {" "}
+                    · <span className="ftn-saved-badge">{saveMessage}</span>
+                  </>
+                )}
               </p>
-              <div className={styles.previewActions}>
+              {savedProjectId && (
+                <p className="ftn-dashboard-link">
+                  <Link href={`/dashboard/projects/${savedProjectId}`}>
+                    View in dashboard →
+                  </Link>
+                </p>
+              )}
+              <div className="ftn-preview-actions">
                 <button
                   type="button"
-                  className={styles.downloadBtn}
+                  className="ftn-download-btn"
                   onClick={handleDownload}
                   disabled={downloading}
                 >
                   {downloading ? (
                     <>
-                      <span className={styles.spinner} />
+                      <span className="ftn-spinner" />
                       Downloading…
                     </>
                   ) : (
@@ -195,25 +268,64 @@ export default function ConverterForm() {
                   href={`/api/preview/${previewId}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={styles.openTabLink}
+                  className="ftn-open-tab-link"
                 >
                   Open in new tab
                 </a>
               </div>
+              {downloadError && (
+                <p className="ftn-download-error">{downloadError}</p>
+              )}
             </div>
           </div>
 
-          <div className={styles.previewFrameWrap}>
-            <div className={styles.previewFrameHeader}>
-              <span className={styles.previewDot} />
-              <span className={styles.previewDot} />
-              <span className={styles.previewDot} />
-              <span className={styles.previewUrl}>Live preview</span>
+          {cmsInfo && (
+            <div
+              className={`ftn-status-card ftn-cms-card ftn-cms-card--${cmsInfo.status}`}
+            >
+              <div className="ftn-status-icon">
+                {cmsInfo.status === "found" ? "◆" : cmsInfo.status === "parse_failed" ? "!" : "○"}
+              </div>
+              <div>
+                <p className="ftn-status-title">
+                  {cmsInfo.status === "found"
+                    ? `CMS detected: ${cmsInfo.collectionCount} collection${cmsInfo.collectionCount !== 1 ? "s" : ""}, ${cmsInfo.fieldCount} field${cmsInfo.fieldCount !== 1 ? "s" : ""}, ${cmsInfo.entryCount} entr${cmsInfo.entryCount !== 1 ? "ies" : "y"}`
+                    : cmsInfo.status === "parse_failed"
+                      ? "CMS found but could not be parsed"
+                      : "No Framer CMS detected"}
+                </p>
+                <p className="ftn-status-detail">{cmsInfo.message}</p>
+                {cmsInfo.status === "found" && cmsInfo.collections.length > 0 && (
+                  <ul className="ftn-cms-list">
+                    {cmsInfo.collections.map((collection) => (
+                      <li key={collection.name}>
+                        <strong>{collection.name}</strong> — {collection.fields.join(", ")}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {cmsInfo.status === "no_cms" && savedProjectId && (
+                  <p className="ftn-cms-hint">
+                    <Link href={`/dashboard/projects/${savedProjectId}/cms`}>
+                      Create CMS collections manually →
+                    </Link>
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="ftn-preview-frame-wrap">
+            <div className="ftn-preview-frame-header">
+              <span className="ftn-preview-dot" />
+              <span className="ftn-preview-dot" />
+              <span className="ftn-preview-dot" />
+              <span className="ftn-preview-url">Live preview</span>
             </div>
             <iframe
               src={`/api/preview/${previewId}`}
               title="Converted site preview"
-              className={styles.previewFrame}
+              className="ftn-preview-frame"
               sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
             />
           </div>
@@ -221,11 +333,11 @@ export default function ConverterForm() {
       )}
 
       {status === "error" && (
-        <div className={`${styles.statusCard} ${styles.error}`}>
-          <div className={styles.statusIcon}>✕</div>
+        <div className="ftn-status-card ftn-status-card--error">
+          <div className="ftn-status-icon">✕</div>
           <div>
-            <p className={styles.statusTitle}>Conversion failed</p>
-            <p className={styles.statusDetail}>{error}</p>
+            <p className="ftn-status-title">Conversion failed</p>
+            <p className="ftn-status-detail">{error}</p>
           </div>
         </div>
       )}

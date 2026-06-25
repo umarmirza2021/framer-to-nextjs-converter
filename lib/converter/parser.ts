@@ -42,9 +42,20 @@ function extractMainHtml($: cheerio.CheerioAPI): string {
   return $("body").html() || "";
 }
 
-function extractScriptUrl($: cheerio.CheerioAPI): string | undefined {
-  const script = $('script[data-framer-bundle="main"]').attr("src");
-  return script;
+function extractScriptUrl($: cheerio.CheerioAPI, html: string): string | undefined {
+  const bundled = $('script[data-framer-bundle="main"]').attr("src");
+  if (bundled) return bundled;
+
+  const moduleScript = $('script[type="module"][src*="script_main"]').attr("src");
+  if (moduleScript) return moduleScript;
+
+  const legacyScript = $('script[type="module"][src*="script.mjs"]').attr("src");
+  if (legacyScript) return legacyScript;
+
+  const match = html.match(
+    /src="([^"]*(?:script_main[^"]*\.mjs|\/script\.mjs)[^"]*)"/
+  );
+  return match?.[1];
 }
 
 function extractModulePreloads($: cheerio.CheerioAPI): string[] {
@@ -145,7 +156,7 @@ export async function parseFramerSite(inputUrl: string): Promise<FramerSite> {
 
   const meta = extractMeta($);
   const styles = extractStyles($);
-  const scriptUrl = extractScriptUrl($);
+  const scriptUrl = extractScriptUrl($, html);
   const modulePreloads = extractModulePreloads($);
   const fonts = extractFonts(html);
 
@@ -214,5 +225,7 @@ export async function parseFramerSite(inputUrl: string): Promise<FramerSite> {
     scriptUrl,
     modulePreloads,
     fonts,
+    searchIndexUrl: searchIndexUrl || searchIndexFallback,
+    bootstrapHtml: html,
   };
 }

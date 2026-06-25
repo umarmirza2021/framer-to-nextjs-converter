@@ -37,6 +37,9 @@ export interface FramerSite {
   scriptUrl?: string;
   modulePreloads: string[];
   fonts: string[];
+  searchIndexUrl?: string;
+  /** Full HTML of the homepage — used for CMS script discovery */
+  bootstrapHtml?: string;
 }
 
 export interface ConversionResult {

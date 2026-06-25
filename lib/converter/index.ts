@@ -1,3 +1,5 @@
+import { detectFramerCmsWithDiagnostics } from "@/lib/cms/framer-detector";
+import type { CmsDetectionResult } from "@/lib/cms/framer-detector";
 import { getCached, storeConversion } from "./cache";
 import { formatConversionError } from "./errors";
 import { buildHtmlDocument, generateNextJsProject } from "./generator";
@@ -41,6 +43,7 @@ export async function convertForPreview(url: string): Promise<{
   stats: ConversionResult["stats"];
   siteName: string;
   title: string;
+  cms: CmsDetectionResult;
 }> {
   const result = await convertFramerToNextJs(url);
   const siteName = new URL(result.site.url).hostname.replace(/\./g, "-");
@@ -48,13 +51,15 @@ export async function convertForPreview(url: string): Promise<{
     result.site.pages.find((p) => p.path === "/" || p.path === "") ||
     result.site.pages[0];
   const previewHtml = buildHtmlDocument(homePage, result.site);
+  const cms = await detectFramerCmsWithDiagnostics(result.site);
 
-  const previewId = storeConversion({
+  const previewId = await storeConversion({
     files: result.files,
     previewHtml,
     stats: result.stats,
     siteName,
     title: result.site.meta.title,
+    cmsDetection: JSON.stringify(cms),
   });
 
   return {
@@ -62,17 +67,19 @@ export async function convertForPreview(url: string): Promise<{
     stats: result.stats,
     siteName,
     title: result.site.meta.title,
+    cms,
   };
 }
 
-export function getPreviewHtml(id: string): string | null {
-  return getCached(id)?.previewHtml ?? null;
+export async function getPreviewHtml(id: string): Promise<string | null> {
+  const entry = await getCached(id);
+  return entry?.previewHtml ?? null;
 }
 
 export async function getCachedZip(
   id: string
 ): Promise<{ zip: Buffer; siteName: string; stats: ConversionResult["stats"] } | null> {
-  const entry = getCached(id);
+  const entry = await getCached(id);
   if (!entry) return null;
   const zip = await createZip(entry.files);
   return { zip, siteName: entry.siteName, stats: entry.stats };
