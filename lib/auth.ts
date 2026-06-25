@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
+import { getAuthSecret } from "@/lib/auth-env";
 import { authConfig } from "@/lib/auth.config";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/password";
@@ -12,6 +13,7 @@ const credentialsSchema = z.object({
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
+  secret: getAuthSecret(),
   providers: [
     Credentials({
       name: "credentials",

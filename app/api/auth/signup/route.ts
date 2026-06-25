@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
+import { getAuthConfigError } from "@/lib/auth-env";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/password";
 
@@ -10,6 +12,11 @@ const signupSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const authError = getAuthConfigError();
+  if (authError) {
+    return NextResponse.json({ error: authError }, { status: 503 });
+  }
+
   try {
     const body = await request.json();
     const parsed = signupSchema.safeParse(body);
@@ -47,7 +54,22 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ user }, { status: 201 });
-  } catch {
+  } catch (error) {
+    console.error("Signup failed:", error);
+
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      (error.code === "P2021" || error.code === "P1001")
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Database is not ready. Redeploy the site after setting DATABASE_URL so migrations can run.",
+        },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Could not create account. Please try again." },
       { status: 500 }

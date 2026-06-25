@@ -42,7 +42,16 @@ export default function AuthForm({ mode }: AuthFormProps) {
       });
 
       if (result?.error) {
-        throw new Error(mode === "login" ? "Invalid email or password" : "Account created but sign-in failed");
+        if (result.error === "Configuration") {
+          throw new Error(
+            "Auth is not configured on the server. Add AUTH_SECRET and AUTH_URL in Netlify/Vercel environment variables, then redeploy."
+          );
+        }
+        throw new Error(
+          mode === "login"
+            ? "Invalid email or password"
+            : "Account created but sign-in failed. Try signing in from the login page."
+        );
       }
 
       router.push("/dashboard");
