@@ -1,6 +1,10 @@
 import * as cheerio from "cheerio";
 import type { FramerHydrateData, FramerMeta, FramerPage, FramerSite } from "./types";
 import { fetchFramerPage, fetchSearchIndex, normalizeFramerUrl } from "./fetcher";
+import { mapWithConcurrency } from "./shared/concurrency";
+
+const MAX_PAGES = 25;
+const PAGE_FETCH_CONCURRENCY = 6;
 
 function extractProjectId(html: string): string | null {
   const match = html.match(/framerusercontent\.com\/sites\/([a-zA-Z0-9]+)\//);
@@ -178,17 +182,26 @@ export async function parseFramerSite(inputUrl: string): Promise<FramerSite> {
 
   if (indexPaths.length) {
     const origin = new URL(baseUrl).origin;
+    const extraPaths = indexPaths
+      .filter((pagePath) => pagePath !== "/" && pagePath !== "")
+      .slice(0, MAX_PAGES - 1);
 
-    for (const pagePath of indexPaths) {
-      if (pagePath === "/" || pagePath === "") continue;
-
-      try {
-        const pageUrl = `${origin}${pagePath.startsWith("/") ? pagePath : `/${pagePath}`}`;
-        const pageHtml = await fetchFramerPage(pageUrl);
-        pages.push(parsePageHtml(pageHtml, pagePath));
-      } catch {
-        // Skip pages that fail to load
+    const extraPages = await mapWithConcurrency(
+      extraPaths,
+      PAGE_FETCH_CONCURRENCY,
+      async (pagePath) => {
+        try {
+          const pageUrl = `${origin}${pagePath.startsWith("/") ? pagePath : `/${pagePath}`}`;
+          const pageHtml = await fetchFramerPage(pageUrl);
+          return parsePageHtml(pageHtml, pagePath);
+        } catch {
+          return null;
+        }
       }
+    );
+
+    for (const page of extraPages) {
+      if (page) pages.push(page);
     }
   }
 

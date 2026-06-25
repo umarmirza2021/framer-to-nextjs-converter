@@ -11,8 +11,8 @@ const features = [
     desc: "Discovers and converts all pages via Framer's search index.",
   },
   {
-    title: "Asset download",
-    desc: "Images and media are downloaded locally into public/assets/.",
+    title: "Asset support",
+    desc: "Images and media load from Framer's CDN for fast, reliable conversions.",
   },
   {
     title: "Live preview",

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   convertForPreview,
+  formatConversionError,
   isFramerUrl,
   normalizeFramerUrl,
 } from "@/lib/converter";
@@ -35,7 +36,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ previewId, stats, siteName, title });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Conversion failed.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const message = formatConversionError(error);
+    const isTimeout = /timed out|timeout/i.test(message);
+    return NextResponse.json(
+      { error: message },
+      { status: isTimeout ? 504 : 500 }
+    );
   }
 }

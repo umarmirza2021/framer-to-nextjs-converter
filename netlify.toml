@@ -10,6 +10,6 @@
 [functions]
   node_bundler = "esbuild"
 
-# Conversion APIs can take up to 60s on large Framer sites
+# Conversion APIs — max timeout on Netlify Pro
 [functions."*"]
   timeout = 60

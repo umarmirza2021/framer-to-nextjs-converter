@@ -44,7 +44,15 @@ export default function ConverterForm() {
       try {
         data = JSON.parse(raw);
       } catch {
-        const snippet = raw.replace(/\s+/g, " ").trim().slice(0, 120);
+        const snippet = raw.replace(/\s+/g, " ").trim().slice(0, 200);
+        if (response.status === 504 || /inactivity timeout/i.test(snippet)) {
+          throw new Error(
+            "Conversion timed out. Large sites can take a while — please try again."
+          );
+        }
+        if (response.status === 502 || response.status === 503) {
+          throw new Error("Server is temporarily unavailable. Please try again in a moment.");
+        }
         throw new Error(
           response.ok
             ? "Server returned an invalid response. Try again."

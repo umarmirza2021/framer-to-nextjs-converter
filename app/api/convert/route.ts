@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { convertAndZip, isFramerUrl, normalizeFramerUrl } from "@/lib/converter";
+import {
+  convertAndZip,
+  formatConversionError,
+  isFramerUrl,
+  normalizeFramerUrl,
+} from "@/lib/converter";
 
 export const maxDuration = 120;
 
@@ -36,7 +41,11 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Conversion failed.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const message = formatConversionError(error);
+    const isTimeout = /timed out|timeout/i.test(message);
+    return NextResponse.json(
+      { error: message },
+      { status: isTimeout ? 504 : 500 }
+    );
   }
 }

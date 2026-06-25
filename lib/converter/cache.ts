@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import type { ConversionResult } from "./types";
 
 interface CachedConversion {
-  zip: Buffer;
+  files: Record<string, string | Buffer>;
   previewHtml: string;
   stats: ConversionResult["stats"];
   siteName: string;

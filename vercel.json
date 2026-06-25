@@ -2,9 +2,12 @@
   "framework": "nextjs",
   "functions": {
     "app/api/convert/route.ts": {
-      "maxDuration": 60
+      "maxDuration": 120
     },
     "app/api/preview/route.ts": {
+      "maxDuration": 120
+    },
+    "app/api/download/[id]/route.ts": {
       "maxDuration": 60
     }
   }

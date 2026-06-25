@@ -1,6 +1,10 @@
 import type { FramerPage, FramerSite } from "./types";
-import { downloadAsset } from "./fetcher";
+import { downloadAssetsParallel } from "./fetcher";
 import { extractAssetUrls } from "./html-to-jsx";
+
+export type GenerateOptions = {
+  downloadAssets?: boolean;
+};
 
 function slugify(path: string): string {
   if (path === "/" || path === "") return "home";
@@ -286,7 +290,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the site.
 ## Notes
 
 - Styles were extracted from Framer's SSR output and included in \`app/globals.css\`.
-- Images have been downloaded to \`public/assets/\` where possible.
+- Images load from Framer's CDN for reliability (optional local assets in \`public/assets/\`).
 - Pages are served as raw HTML via Route Handlers (\`app/route.ts\`) — zero React hydration, full Framer compatibility.
 - React Strict Mode is disabled in \`next.config.ts\` because Framer animations can break with double-mounting.
 
@@ -298,26 +302,24 @@ Open [http://localhost:3000](http://localhost:3000) to view the site.
 }
 
 export async function generateNextJsProject(
-  site: FramerSite
-): Promise<Record<string, string | Buffer>> {
+  site: FramerSite,
+  options: GenerateOptions = {}
+): Promise<{ files: Record<string, string | Buffer>; assetCount: number }> {
   const files: Record<string, string | Buffer> = {};
   const siteName = new URL(site.url).hostname.replace(/\./g, "-");
-  const assetMap = new Map<string, string>();
 
   const allHtml = site.pages.map((p) => p.html).join("") + site.styles.join("");
   const assetUrls = extractAssetUrls(allHtml);
 
-  let assetIndex = 0;
-  for (const url of assetUrls) {
-    const buffer = await downloadAsset(url);
-    if (!buffer) continue;
-
-    const ext = url.split(".").pop()?.split("?")[0] || "bin";
-    const filename = `asset-${assetIndex}.${ext}`;
-    const localPath = `/assets/${filename}`;
-    assetMap.set(url, localPath);
-    files[`public/assets/${filename}`] = buffer;
-    assetIndex++;
+  if (options.downloadAssets) {
+    const downloaded = await downloadAssetsParallel(assetUrls);
+    let assetIndex = 0;
+    for (const [url, buffer] of downloaded) {
+      const ext = url.split(".").pop()?.split("?")[0] || "bin";
+      const filename = `asset-${assetIndex}.${ext}`;
+      files[`public/assets/${filename}`] = buffer;
+      assetIndex++;
+    }
   }
 
   files["package.json"] = generatePackageJson(siteName);
@@ -340,5 +342,5 @@ export async function generateNextJsProject(
     ] = generateRouteHandler(docName, page.path);
   }
 
-  return files;
+  return { files, assetCount: assetUrls.length };
 }
