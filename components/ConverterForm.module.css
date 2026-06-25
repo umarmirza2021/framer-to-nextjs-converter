@@ -11,59 +11,6 @@
   width: 100%;
 }
 
-.platformTabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 10px;
-  padding: 4px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.platformTab {
-  flex: 1;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.2s, color 0.2s;
-}
-
-.platformTab:hover:not(:disabled) {
-  color: var(--text);
-  background: var(--surface-hover);
-}
-
-.platformTabActive {
-  background: var(--accent);
-  color: white;
-}
-
-.platformTabActive:hover:not(:disabled) {
-  background: var(--accent-hover);
-  color: white;
-}
-
-.platformBadge {
-  display: inline-block;
-  background: var(--surface-hover);
-  border: 1px solid var(--border);
-  border-radius: 100px;
-  padding: 2px 8px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-right: 8px;
-  color: var(--accent);
-}
-
 .inputGroup {
   display: flex;
   gap: 8px;

@@ -39,37 +39,8 @@ export interface FramerSite {
   fonts: string[];
 }
 
-export type Platform = "framer" | "webflow";
-
-export interface WebflowMeta {
-  title: string;
-  description: string;
-  ogImage?: string;
-  canonical?: string;
-  favicon?: string;
-}
-
-export interface WebflowPage {
-  path: string;
-  pageId?: string;
-  title: string;
-  bodyClass?: string;
-  htmlAttrs: Record<string, string>;
-  headHtml: string;
-  bodyHtml: string;
-}
-
-export interface WebflowSite {
-  url: string;
-  siteId: string;
-  meta: WebflowMeta;
-  pages: WebflowPage[];
-  inlineStyles: string[];
-}
-
 export interface ConversionResult {
-  platform: Platform;
-  site: FramerSite | WebflowSite;
+  site: FramerSite;
   files: Record<string, string | Buffer>;
   stats: {
     pages: number;

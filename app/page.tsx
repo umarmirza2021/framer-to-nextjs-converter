@@ -3,20 +3,20 @@ import styles from "./page.module.css";
 
 const features = [
   {
-    title: "Framer & Webflow",
-    desc: "Supports published Framer sites and live Webflow sites on custom domains.",
-  },
-  {
     title: "Full page extraction",
-    desc: "Pulls SSR HTML, CSS, meta tags, scripts, and fonts from your published site.",
+    desc: "Pulls SSR HTML, CSS, meta tags, and fonts from your published Framer site.",
   },
   {
     title: "Multi-page support",
-    desc: "Discovers pages via Framer search index or Webflow sitemap.xml.",
+    desc: "Discovers and converts all pages via Framer's search index.",
+  },
+  {
+    title: "Asset download",
+    desc: "Images and media are downloaded locally into public/assets/.",
   },
   {
     title: "Live preview",
-    desc: "See the converted site in your browser before downloading — interactions included.",
+    desc: "See the converted site in your browser before downloading — animations and layout included.",
   },
   {
     title: "Deploy-ready zip",
@@ -28,15 +28,15 @@ export default function Home() {
   return (
     <main className={styles.page}>
       <header className={styles.hero}>
-        <div className={styles.badge}>Framer & Webflow → Next.js</div>
+        <div className={styles.badge}>Framer → Next.js</div>
         <h1 className={styles.title}>
-          Convert Framer &amp; Webflow
+          Convert Framer sites
           <br />
           to <span className={styles.gradient}>Next.js</span>
         </h1>
         <p className={styles.subtitle}>
-          Paste your site URL and get a ready-to-run Next.js project — pages, styles, assets, and
-          interactions included.
+          Paste your Framer URL and get a ready-to-run Next.js project — pages, styles, assets, and
+          animations included.
         </p>
         <ConverterForm />
       </header>
@@ -54,13 +54,13 @@ export default function Home() {
         <h2>How it works</h2>
         <ol>
           <li>
-            <strong>Fetch</strong> — Downloads your published Framer or Webflow site HTML
+            <strong>Fetch</strong> — Downloads your published Framer site HTML
           </li>
           <li>
             <strong>Parse</strong> — Extracts SSR content, CSS, meta data, and page routes
           </li>
           <li>
-            <strong>Convert</strong> — Builds pure HTML Next.js routes with full platform compatibility
+            <strong>Convert</strong> — Builds a pure HTML Next.js route with full Framer animations
           </li>
           <li>
             <strong>Preview</strong> — Opens a live browser preview so you can check the result first
@@ -73,7 +73,8 @@ export default function Home() {
 
       <footer className={styles.footer}>
         <p>
-          Works with <code>*.framer.website</code> URLs and published Webflow sites on custom domains.
+          Works with <code>*.framer.website</code> URLs. Custom domains supported when they resolve to
+          Framer.
         </p>
       </footer>
     </main>
