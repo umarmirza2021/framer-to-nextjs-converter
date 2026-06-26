@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cms } from "@/lib/cms/fetch";
 import type { CMSCollection, CMSField, CMSItem } from "@/lib/cms/types";
+import RichTextEditor from "./RichTextEditor";
 import styles from "./admin.module.css";
 
 function FieldInput({
@@ -18,14 +19,7 @@ function FieldInput({
   const str = value == null ? "" : String(value);
   switch (field.type) {
     case "rich-text":
-      // Interim: plain HTML/markdown textarea. Upgraded to TipTap in polish stage.
-      return (
-        <textarea
-          className={styles.textarea}
-          value={str}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      );
+      return <RichTextEditor value={str} onChange={(html) => onChange(html)} />;
     case "boolean":
       return (
         <label className={styles.row} style={{ color: "#aeb3bf", fontSize: 14 }}>

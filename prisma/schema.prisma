@@ -140,3 +140,22 @@ model CmsBinding {
 
   @@index([pageId])
 }
+
+// Key/value store for admin settings (deploy tokens, auto-deploy, media provider).
+model CmsSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+// History log of CMS-triggered deployments.
+model CmsDeployment {
+  id        String   @id @default(cuid())
+  platform  String // vercel | netlify
+  status    String   @default("triggered")
+  url       String?
+  deployId  String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

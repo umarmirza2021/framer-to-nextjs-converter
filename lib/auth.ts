@@ -26,6 +26,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!parsed.success) return null;
 
         const { email, password } = parsed.data;
+
+        // Single-admin login via env (ADMIN_EMAIL + ADMIN_PASSWORD_HASH).
+        const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase();
+        const adminHash = process.env.ADMIN_PASSWORD_HASH;
+        if (adminEmail && adminHash && email.toLowerCase() === adminEmail) {
+          const validAdmin = await verifyPassword(password, adminHash);
+          if (!validAdmin) return null;
+          return { id: "admin", email: adminEmail, name: "Admin" };
+        }
+
         const user = await prisma.user.findUnique({
           where: { email: email.toLowerCase() },
         });

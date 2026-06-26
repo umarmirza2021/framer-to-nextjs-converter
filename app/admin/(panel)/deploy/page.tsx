@@ -1,3 +1,4 @@
+import DeployPanel from "@/components/admin/DeployPanel";
 import styles from "@/components/admin/admin.module.css";
 
 export default function DeployPage() {
@@ -9,10 +10,7 @@ export default function DeployPage() {
           <div className={styles.subtitle}>Publish your site to Vercel or Netlify</div>
         </div>
       </div>
-      <p className={styles.empty}>
-        Deployment control (Vercel/Netlify triggers, live logs, history) is
-        added in the next stage.
-      </p>
+      <DeployPanel />
     </div>
   );
 }
