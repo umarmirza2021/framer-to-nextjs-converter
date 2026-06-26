@@ -64,3 +64,77 @@ model Deployment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// ─────────────────────────────────────────────────────────────
+// CMS (Framer-style content management)
+// Field type:   text | rich-text | image | date | boolean | number | url | color | reference
+// Page type:    index | detail
+// Layer type:   text | image | background-image | href
+// ─────────────────────────────────────────────────────────────
+
+model CMSCollection {
+  id        String       @id @default(cuid())
+  name      String
+  slug      String       @unique
+  fields    CMSField[]
+  items     CMSItem[]
+  pages     CMSPage[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model CMSField {
+  id           String        @id @default(cuid())
+  collectionId String
+  collection   CMSCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  name         String
+  key          String
+  type         String
+  required     Boolean       @default(false)
+  defaultValue Json?
+  sortOrder    Int           @default(0)
+
+  @@unique([collectionId, key])
+  @@index([collectionId])
+}
+
+model CMSItem {
+  id           String        @id @default(cuid())
+  collectionId String
+  collection   CMSCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  slug         String
+  data         Json
+  published    Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([collectionId, slug])
+  @@index([collectionId])
+}
+
+model CMSPage {
+  id           String        @id @default(cuid())
+  collectionId String
+  collection   CMSCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  pageType     String
+  framerPageId String
+  route        String
+  bindings     CMSBinding[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([collectionId])
+}
+
+model CMSBinding {
+  id           String  @id @default(cuid())
+  pageId       String
+  page         CMSPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  layerId      String
+  layerType    String
+  collectionId String
+  fieldKey     String
+  pageType     String
+
+  @@index([pageId])
+}
