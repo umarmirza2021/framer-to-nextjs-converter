@@ -72,21 +72,21 @@ model Deployment {
 // Layer type:   text | image | background-image | href
 // ─────────────────────────────────────────────────────────────
 
-model CMSCollection {
+model CmsCollection {
   id        String       @id @default(cuid())
   name      String
   slug      String       @unique
-  fields    CMSField[]
-  items     CMSItem[]
-  pages     CMSPage[]
+  fields    CmsField[]
+  items     CmsItem[]
+  pages     CmsPage[]
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 }
 
-model CMSField {
+model CmsField {
   id           String        @id @default(cuid())
   collectionId String
-  collection   CMSCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collection   CmsCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
   name         String
   key          String
   type         String
@@ -98,10 +98,10 @@ model CMSField {
   @@index([collectionId])
 }
 
-model CMSItem {
+model CmsItem {
   id           String        @id @default(cuid())
   collectionId String
-  collection   CMSCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collection   CmsCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
   slug         String
   data         Json
   published    Boolean       @default(false)
@@ -112,24 +112,24 @@ model CMSItem {
   @@index([collectionId])
 }
 
-model CMSPage {
+model CmsPage {
   id           String        @id @default(cuid())
   collectionId String
-  collection   CMSCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collection   CmsCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
   pageType     String
   framerPageId String
   route        String
-  bindings     CMSBinding[]
+  bindings     CmsBinding[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
   @@index([collectionId])
 }
 
-model CMSBinding {
+model CmsBinding {
   id           String  @id @default(cuid())
   pageId       String
-  page         CMSPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  page         CmsPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
   layerId      String
   layerType    String
   collectionId String
