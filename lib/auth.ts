@@ -33,7 +33,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (adminEmail && adminHash && email.toLowerCase() === adminEmail) {
           const validAdmin = await verifyPassword(password, adminHash);
           if (!validAdmin) return null;
-          return { id: "admin", email: adminEmail, name: "Admin" };
+          // Back the env-admin with a real User row so foreign keys (projects,
+          // deploy accounts) resolve. Reuse the existing account if present.
+          const adminUser = await prisma.user.upsert({
+            where: { email: adminEmail },
+            update: {},
+            create: { email: adminEmail, passwordHash: adminHash, name: "Admin" },
+          });
+          return { id: adminUser.id, email: adminUser.email, name: adminUser.name };
         }
 
         const user = await prisma.user.findUnique({
