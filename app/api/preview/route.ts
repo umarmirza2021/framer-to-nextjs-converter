@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid URL format." }, { status: 400 });
     }
 
-    const { previewId, stats, siteName, title, cms } =
+    const { previewId, stats, siteName, title } =
       await convertForPreview(normalizedUrl);
 
     return NextResponse.json({
@@ -39,19 +39,6 @@ export async function POST(request: NextRequest) {
       stats,
       siteName,
       title,
-      cms: {
-        status: cms.status,
-        message: cms.message,
-        collectionCount: cms.collections.length,
-        fieldCount: cms.collections.reduce((n, c) => n + c.fields.length, 0),
-        entryCount: cms.collections.reduce((n, c) => n + c.entries.length, 0),
-        collections: cms.collections.map((c) => ({
-          name: c.name,
-          fieldCount: c.fields.length,
-          entryCount: c.entries.length,
-          fields: c.fields.map((f) => f.name),
-        })),
-      },
     });
   } catch (error) {
     const message = formatConversionError(error);

@@ -8,7 +8,6 @@ datasource db {
 }
 
 // ProjectStatus: DRAFT | READY | DEPLOYED
-// CmsFieldType: PLAIN_TEXT | FORMATTED_TEXT | DATE | LINK | IMAGE | GALLERY | COLOR | TOGGLE | NUMBER | OPTION | FILE | VECTOR_SET | REFERENCE | MULTI_REFERENCE | DIVIDER
 // Platform: NETLIFY | VERCEL
 // DeploymentStatus: PENDING | BUILDING | READY | FAILED
 
@@ -37,52 +36,9 @@ model Project {
   cacheId        String?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
-  cmsCollections CmsCollection[]
   deployments    Deployment[]
 
   @@index([userId])
-}
-
-model CmsCollection {
-  id        String     @id @default(cuid())
-  projectId String
-  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  name      String
-  slug      String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  fields    CmsField[]
-  entries   CmsEntry[]
-
-  @@unique([projectId, slug])
-}
-
-model CmsField {
-  id              String        @id @default(cuid())
-  collectionId    String
-  collection      CmsCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  name            String
-  slug            String
-  type            String
-  required        Boolean       @default(false)
-  options         String?
-  refCollectionId String?
-  sortOrder       Int           @default(0)
-
-  @@unique([collectionId, slug])
-}
-
-model CmsEntry {
-  id           String        @id @default(cuid())
-  collectionId String
-  collection   CmsCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  slug         String
-  values       String
-  published    Boolean       @default(false)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-
-  @@unique([collectionId, slug])
 }
 
 model DeploymentAccount {

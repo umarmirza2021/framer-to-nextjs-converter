@@ -1,5 +1,3 @@
-import { detectFramerCmsWithDiagnostics } from "@/lib/cms/framer-detector";
-import type { CmsDetectionResult } from "@/lib/cms/framer-detector";
 import { getCached, storeConversion } from "./cache";
 import { formatConversionError } from "./errors";
 import { buildHtmlDocument, generateNextJsProject } from "./generator";
@@ -43,7 +41,6 @@ export async function convertForPreview(url: string): Promise<{
   stats: ConversionResult["stats"];
   siteName: string;
   title: string;
-  cms: CmsDetectionResult;
 }> {
   const result = await convertFramerToNextJs(url);
   const siteName = new URL(result.site.url).hostname.replace(/\./g, "-");
@@ -51,7 +48,6 @@ export async function convertForPreview(url: string): Promise<{
     result.site.pages.find((p) => p.path === "/" || p.path === "") ||
     result.site.pages[0];
   const previewHtml = buildHtmlDocument(homePage, result.site);
-  const cms = await detectFramerCmsWithDiagnostics(result.site);
 
   const previewId = await storeConversion({
     files: result.files,
@@ -59,7 +55,6 @@ export async function convertForPreview(url: string): Promise<{
     stats: result.stats,
     siteName,
     title: result.site.meta.title,
-    cmsDetection: JSON.stringify(cms),
   });
 
   return {
@@ -67,7 +62,6 @@ export async function convertForPreview(url: string): Promise<{
     stats: result.stats,
     siteName,
     title: result.site.meta.title,
-    cms,
   };
 }
 

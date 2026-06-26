@@ -13,20 +13,6 @@ interface ConvertStats {
   cssSize: number;
 }
 
-interface CmsPreviewInfo {
-  status: "found" | "no_cms" | "parse_failed";
-  message: string;
-  collectionCount: number;
-  fieldCount: number;
-  entryCount: number;
-  collections: Array<{
-    name: string;
-    fieldCount: number;
-    entryCount: number;
-    fields: string[];
-  }>;
-}
-
 export default function ConverterForm() {
   const { data: session } = useSession();
   const [url, setUrl] = useState("");
@@ -40,7 +26,6 @@ export default function ConverterForm() {
   const [downloadError, setDownloadError] = useState("");
   const [savedProjectId, setSavedProjectId] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState("");
-  const [cmsInfo, setCmsInfo] = useState<CmsPreviewInfo | null>(null);
 
   async function handleConvert(e: React.FormEvent) {
     e.preventDefault();
@@ -54,7 +39,6 @@ export default function ConverterForm() {
     setSiteName("");
     setSavedProjectId(null);
     setSaveMessage("");
-    setCmsInfo(null);
 
     try {
       const response = await fetch("/api/preview", {
@@ -71,7 +55,6 @@ export default function ConverterForm() {
         stats?: ConvertStats;
         title?: string;
         siteName?: string;
-        cms?: CmsPreviewInfo;
       };
       try {
         data = JSON.parse(raw);
@@ -104,7 +87,6 @@ export default function ConverterForm() {
       setPreviewId(data.previewId);
       setTitle(data.title || "");
       setSiteName(data.siteName || "");
-      setCmsInfo(data.cms ?? null);
       setStatus("preview");
 
       if (session?.user) {
@@ -123,11 +105,7 @@ export default function ConverterForm() {
           const saveData = await saveRes.json();
           if (saveRes.ok && saveData.project?.id) {
             setSavedProjectId(saveData.project.id);
-            const cmsNote =
-              saveData.cmsCollectionsCreated > 0
-                ? ` · ${saveData.cmsCollectionsCreated} CMS collection(s) auto-created`
-                : "";
-            setSaveMessage(`Saved to your dashboard${cmsNote}`);
+            setSaveMessage("Saved to your dashboard");
           }
         } catch {
           setSaveMessage("Preview ready — could not save to dashboard");
@@ -278,42 +256,6 @@ export default function ConverterForm() {
               )}
             </div>
           </div>
-
-          {cmsInfo && (
-            <div
-              className={`ftn-status-card ftn-cms-card ftn-cms-card--${cmsInfo.status}`}
-            >
-              <div className="ftn-status-icon">
-                {cmsInfo.status === "found" ? "◆" : cmsInfo.status === "parse_failed" ? "!" : "○"}
-              </div>
-              <div>
-                <p className="ftn-status-title">
-                  {cmsInfo.status === "found"
-                    ? `CMS detected: ${cmsInfo.collectionCount} collection${cmsInfo.collectionCount !== 1 ? "s" : ""}, ${cmsInfo.fieldCount} field${cmsInfo.fieldCount !== 1 ? "s" : ""}, ${cmsInfo.entryCount} entr${cmsInfo.entryCount !== 1 ? "ies" : "y"}`
-                    : cmsInfo.status === "parse_failed"
-                      ? "CMS found but could not be parsed"
-                      : "No Framer CMS detected"}
-                </p>
-                <p className="ftn-status-detail">{cmsInfo.message}</p>
-                {cmsInfo.status === "found" && cmsInfo.collections.length > 0 && (
-                  <ul className="ftn-cms-list">
-                    {cmsInfo.collections.map((collection) => (
-                      <li key={collection.name}>
-                        <strong>{collection.name}</strong> — {collection.fields.join(", ")}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {cmsInfo.status === "no_cms" && savedProjectId && (
-                  <p className="ftn-cms-hint">
-                    <Link href={`/dashboard/projects/${savedProjectId}/cms`}>
-                      Create CMS collections manually →
-                    </Link>
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
 
           <div className="ftn-preview-frame-wrap">
             <div className="ftn-preview-frame-header">

@@ -1,8 +1,3 @@
-import type {
-  CmsDetectionResult,
-  DetectedCmsCollection,
-} from "@/lib/cms/framer-detector";
-import { seedCmsFromDetection } from "@/lib/cms/seed-from-framer";
 import { getCached } from "@/lib/converter/cache";
 import { prisma } from "@/lib/prisma";
 import type { ConversionResult } from "@/lib/converter/types";
@@ -48,22 +43,7 @@ export async function saveProjectFromCache(input: SaveProjectInput) {
     },
   });
 
-  let cmsCollectionsCreated = 0;
-  if (cached.cmsDetection) {
-    try {
-      const parsed = JSON.parse(cached.cmsDetection) as
-        | CmsDetectionResult
-        | DetectedCmsCollection[];
-      const collections = Array.isArray(parsed) ? parsed : parsed.collections;
-      cmsCollectionsCreated = await seedCmsFromDetection(project.id, collections, {
-        replace: true,
-      });
-    } catch {
-      // CMS seed is best-effort
-    }
-  }
-
-  return { project, cmsCollectionsCreated };
+  return { project };
 }
 
 export function deserializeFiles(
