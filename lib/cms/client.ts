@@ -333,6 +333,8 @@ export async function registerPage(input: {
   pageType: CMSPageType;
   framerPageId: string;
   route: string;
+  template?: string;
+  repeatLayerId?: string;
 }): Promise<CMSPage> {
   const collection = await prisma.cmsCollection.findUnique({ where: { id: input.collectionId } });
   if (!collection) throw new NotFoundError("Collection not found");
@@ -343,6 +345,8 @@ export async function registerPage(input: {
       pageType: input.pageType,
       framerPageId: input.framerPageId,
       route: input.route,
+      template: input.template ?? "",
+      repeatLayerId: input.repeatLayerId ?? null,
     },
     include: { bindings: true },
   });
@@ -386,4 +390,41 @@ export async function getItemBySlug(
     where: { collectionId: collection.id, slug: itemSlug },
   });
   return item ? mapItem(item) : null;
+}
+
+// ── Public content readers (used by generated CMS pages) ─────
+
+/** Get items for a collection by its slug — used by generated index pages. */
+export async function getCMSItems(
+  collectionSlug: string,
+  options: { published?: boolean } = {}
+): Promise<CMSItem[]> {
+  const collection = await prisma.cmsCollection.findUnique({ where: { slug: collectionSlug } });
+  if (!collection) return [];
+  const items = await prisma.cmsItem.findMany({
+    where: {
+      collectionId: collection.id,
+      ...(options.published !== undefined ? { published: options.published } : {}),
+    },
+    orderBy: { createdAt: "desc" },
+  });
+  return items.map(mapItem);
+}
+
+/** Get a single item by collection slug + item slug — used by generated detail pages. */
+export async function getCMSItem(
+  collectionSlug: string,
+  itemSlug: string
+): Promise<CMSItem | null> {
+  return getItemBySlug(collectionSlug, itemSlug);
+}
+
+/** Load a page with its bindings + parent collection (used by code generation). */
+export async function getPageForCodegen(pageId: string) {
+  const page = await prisma.cmsPage.findUnique({
+    where: { id: pageId },
+    include: { bindings: true, collection: { include: { fields: true } } },
+  });
+  if (!page) throw new NotFoundError("Page not found");
+  return page;
 }

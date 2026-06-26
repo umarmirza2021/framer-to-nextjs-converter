@@ -113,15 +113,17 @@ model CmsItem {
 }
 
 model CmsPage {
-  id           String        @id @default(cuid())
-  collectionId String
-  collection   CmsCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  pageType     String
-  framerPageId String
-  route        String
-  bindings     CmsBinding[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id            String        @id @default(cuid())
+  collectionId  String
+  collection    CmsCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  pageType      String
+  framerPageId  String
+  route         String
+  template      String        @default("") // Framer HTML for this page (card for index, layout for detail)
+  repeatLayerId String? // index pages: data-framer-name of the card to repeat per item
+  bindings      CmsBinding[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   @@index([collectionId])
 }

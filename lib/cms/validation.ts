@@ -42,6 +42,8 @@ export const registerPageSchema = z.object({
   pageType: z.enum(["index", "detail"]),
   framerPageId: z.string().min(1),
   route: z.string().min(1),
+  template: z.string().optional().default(""),
+  repeatLayerId: z.string().optional(),
 });
 
 export const bindingSchema = z.object({
