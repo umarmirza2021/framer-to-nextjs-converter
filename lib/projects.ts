@@ -11,7 +11,7 @@ interface SaveProjectInput {
   stats: ConversionResult["stats"];
 }
 
-function serializeFiles(files: Record<string, string | Buffer>): string {
+export function serializeFiles(files: Record<string, string | Buffer>): string {
   const serialized: Record<string, string | { type: "buffer"; data: string }> = {};
   for (const [path, content] of Object.entries(files)) {
     if (Buffer.isBuffer(content)) {

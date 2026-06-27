@@ -5,10 +5,14 @@ import { parseFramerSite } from "./parser";
 import { createZip } from "./zip";
 import type { ConversionResult } from "./types";
 
-export async function convertFramerToNextJs(url: string): Promise<ConversionResult> {
+export async function convertFramerToNextJs(
+  url: string,
+  options: { optimizeImages?: boolean } = {}
+): Promise<ConversionResult> {
   const site = await parseFramerSite(url);
   const { files, assetCount } = await generateNextJsProject(site, {
     downloadAssets: false,
+    optimizeImages: options.optimizeImages,
   });
 
   const cssSize = site.styles.reduce((sum, s) => sum + s.length, 0);
@@ -24,8 +28,11 @@ export async function convertFramerToNextJs(url: string): Promise<ConversionResu
   };
 }
 
-export async function convertAndZip(url: string): Promise<{ zip: Buffer; stats: ConversionResult["stats"]; siteName: string }> {
-  const result = await convertFramerToNextJs(url);
+export async function convertAndZip(
+  url: string,
+  options: { optimizeImages?: boolean } = {}
+): Promise<{ zip: Buffer; stats: ConversionResult["stats"]; siteName: string }> {
+  const result = await convertFramerToNextJs(url, options);
   const zip = await createZip(result.files);
   const siteName = new URL(result.site.url).hostname.replace(/\./g, "-");
 

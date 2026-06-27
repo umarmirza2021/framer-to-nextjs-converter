@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { projectFilesToDeployList } from "@/lib/deploy/files";
 import { deployToNetlify } from "@/lib/deploy/netlify";
 import { deployToVercel } from "@/lib/deploy/vercel";
+import { convertFramerToNextJs } from "@/lib/converter";
+import { serializeFiles } from "@/lib/projects";
 
 export const maxDuration = 120;
 
@@ -58,16 +60,25 @@ export async function POST(
   try {
     let url: string;
 
+    // Regenerate the project from the source URL with image optimization so the
+    // deployed site self-hosts WebP images instead of pulling Framer's CDN.
+    // Falls back to the stored files if the live re-conversion fails.
+    let filesJson = project.filesJson;
+    try {
+      const optimized = await convertFramerToNextJs(project.framerUrl, {
+        optimizeImages: true,
+      });
+      filesJson = serializeFiles(optimized.files);
+    } catch {
+      // keep stored filesJson
+    }
+
     if (platform === "VERCEL") {
-      const files = projectFilesToDeployList(project.filesJson);
+      const files = projectFilesToDeployList(filesJson);
       const result = await deployToVercel(account.accessToken, project.siteName, files);
       url = result.url;
     } else {
-      const result = await deployToNetlify(
-        account.accessToken,
-        project.siteName,
-        project.filesJson
-      );
+      const result = await deployToNetlify(account.accessToken, project.siteName, filesJson);
       url = result.url;
     }
 

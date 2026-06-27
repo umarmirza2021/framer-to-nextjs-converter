@@ -1,9 +1,12 @@
 import type { FramerPage, FramerSite } from "./types";
 import { downloadAssetsParallel } from "./fetcher";
-import { extractAssetUrls } from "./html-to-jsx";
+import { extractAssetUrls, localizeAssets } from "./html-to-jsx";
+import { optimizeSiteImages, type OptimizeResult } from "./optimize-images";
 
 export type GenerateOptions = {
   downloadAssets?: boolean;
+  /** Download images, re-encode to WebP, self-host them, and rewrite all URLs. */
+  optimizeImages?: boolean;
 };
 
 function slugify(path: string): string {
@@ -304,14 +307,33 @@ Open [http://localhost:3000](http://localhost:3000) to view the site.
 export async function generateNextJsProject(
   site: FramerSite,
   options: GenerateOptions = {}
-): Promise<{ files: Record<string, string | Buffer>; assetCount: number }> {
+): Promise<{
+  files: Record<string, string | Buffer>;
+  assetCount: number;
+  imageStats?: OptimizeResult["stats"];
+}> {
   const files: Record<string, string | Buffer> = {};
   const siteName = new URL(site.url).hostname.replace(/\./g, "-");
 
   const allHtml = site.pages.map((p) => p.html).join("") + site.styles.join("");
   const assetUrls = extractAssetUrls(allHtml);
 
-  if (options.downloadAssets) {
+  // The site we actually emit — replaced with a localized copy when optimizing.
+  let activeSite = site;
+  let imageStats: OptimizeResult["stats"] | undefined;
+
+  if (options.optimizeImages) {
+    // Download + re-encode images to WebP, self-host them, rewrite all URLs.
+    const optimized = await optimizeSiteImages(site);
+    const map = optimized.assetMap;
+    activeSite = {
+      ...site,
+      styles: site.styles.map((s) => localizeAssets(s, map)),
+      pages: site.pages.map((p) => ({ ...p, html: localizeAssets(p.html, map) })),
+    };
+    Object.assign(files, optimized.files);
+    imageStats = optimized.stats;
+  } else if (options.downloadAssets) {
     const downloaded = await downloadAssetsParallel(assetUrls);
     let assetIndex = 0;
     for (const [url, buffer] of downloaded) {
@@ -328,13 +350,13 @@ export async function generateNextJsProject(
   files["next.config.ts"] = generateNextConfig();
   files["next-env.d.ts"] = '/// <reference types="next" />\n/// <reference types="next/image-types/global" />\n';
   files["app/layout.tsx"] = generateLayout();
-  files["app/globals.css"] = generateGlobalsCss(site);
-  files["README.md"] = generateReadme(site);
+  files["app/globals.css"] = generateGlobalsCss(activeSite);
+  files["README.md"] = generateReadme(activeSite);
 
-  for (const page of site.pages) {
+  for (const page of activeSite.pages) {
     const docName = toComponentName(page.path) + "Document";
 
-    files[`lib/framer/${docName}.ts`] = generateDocumentModule(docName, page, site);
+    files[`lib/framer/${docName}.ts`] = generateDocumentModule(docName, page, activeSite);
     files[
       page.path === "/" || page.path === ""
         ? "app/route.ts"
@@ -342,5 +364,5 @@ export async function generateNextJsProject(
     ] = generateRouteHandler(docName, page.path);
   }
 
-  return { files, assetCount: assetUrls.length };
+  return { files, assetCount: assetUrls.length, imageStats };
 }
