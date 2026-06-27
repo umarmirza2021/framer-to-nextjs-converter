@@ -3,6 +3,14 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { Check, Download, ExternalLink } from "@/components/Icons";
+
+const buildIncludes = [
+  "Framer JavaScript runtime removed",
+  "Images re-encoded to WebP & self-hosted",
+  "Fonts self-hosted with display-swap",
+  "Static HTML, edge-ready for deploy",
+];
 
 
 type Status = "idle" | "converting" | "preview" | "error";
@@ -203,58 +211,64 @@ export default function ConverterForm() {
 
       {showPreview && stats && (
         <div className="ftn-preview-section">
-          <div className="ftn-status-card ftn-status-card--success">
-            <div className="ftn-status-icon">✓</div>
-            <div className="ftn-preview-header">
-              <p className="ftn-status-title">
-                {title ? `Preview: ${title}` : "Preview ready"}
-              </p>
-              <p className="ftn-status-detail">
-                {stats.pages} page{stats.pages !== 1 ? "s" : ""} · {stats.assets} asset
-                {stats.assets !== 1 ? "s" : ""} · {(stats.cssSize / 1024).toFixed(0)} KB CSS
-                {saveMessage && (
-                  <>
-                    {" "}
-                    · <span className="ftn-saved-badge">{saveMessage}</span>
-                  </>
-                )}
-              </p>
-              {savedProjectId && (
-                <p className="ftn-dashboard-link">
-                  <Link href={`/dashboard/projects/${savedProjectId}`}>
-                    View in dashboard →
-                  </Link>
+          <div className="ftn-result-card">
+            <div className="ftn-result-head">
+              <span className="ftn-result-check">
+                <Check size={16} />
+              </span>
+              <div className="ftn-result-headtext">
+                <p className="ftn-result-title">{title || "Your site"} is ready</p>
+                <p className="ftn-result-meta">
+                  {stats.pages} page{stats.pages !== 1 ? "s" : ""} captured and optimized
                 </p>
-              )}
-              <div className="ftn-preview-actions">
-                <button
-                  type="button"
-                  className="ftn-download-btn"
-                  onClick={handleDownload}
-                  disabled={downloading}
-                >
-                  {downloading ? (
-                    <>
-                      <span className="ftn-spinner" />
-                      Downloading…
-                    </>
-                  ) : (
-                    "Download Next.js Project"
-                  )}
-                </button>
-                <a
-                  href={`/api/preview/${previewId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ftn-open-tab-link"
-                >
-                  Open in new tab
-                </a>
               </div>
-              {downloadError && (
-                <p className="ftn-download-error">{downloadError}</p>
+              {savedProjectId && (
+                <Link className="ftn-result-dashlink" href={`/dashboard/projects/${savedProjectId}`}>
+                  View in dashboard
+                </Link>
               )}
             </div>
+
+            <ul className="ftn-optim-list">
+              {buildIncludes.map((item) => (
+                <li key={item}>
+                  <Check size={15} className="ftn-optim-check" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+
+            <div className="ftn-result-actions">
+              <button
+                type="button"
+                className="ftn-btn-primary"
+                onClick={handleDownload}
+                disabled={downloading}
+              >
+                {downloading ? (
+                  <>
+                    <span className="ftn-spinner" />
+                    Preparing…
+                  </>
+                ) : (
+                  <>
+                    <Download size={16} />
+                    Download project
+                  </>
+                )}
+              </button>
+              <a
+                href={`/api/preview/${previewId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ftn-btn-secondary"
+              >
+                <ExternalLink size={15} />
+                Open full preview
+              </a>
+              {saveMessage && <span className="ftn-saved-badge">{saveMessage}</span>}
+            </div>
+            {downloadError && <p className="ftn-download-error">{downloadError}</p>}
           </div>
 
           <div className="ftn-preview-frame-wrap">
@@ -262,7 +276,7 @@ export default function ConverterForm() {
               <span className="ftn-preview-dot" />
               <span className="ftn-preview-dot" />
               <span className="ftn-preview-dot" />
-              <span className="ftn-preview-url">Live preview</span>
+              <span className="ftn-preview-url">Live preview · {siteName || "converted site"}</span>
             </div>
             <iframe
               src={`/api/preview/${previewId}`}
