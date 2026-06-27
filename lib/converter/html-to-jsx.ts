@@ -237,25 +237,33 @@ export function htmlToJsx(html: string): string {
   return convertNode(cleaned).trim();
 }
 
+// Strip surrounding quotes/whitespace and any query string from a captured URL.
+function cleanUrl(raw: string): string {
+  return raw.trim().replace(/^['"]|['"]$/g, "").split("?")[0];
+}
+
 export function extractAssetUrls(html: string): string[] {
   const urls = new Set<string>();
   const patterns = [
     /src="(https:\/\/framerusercontent\.com[^"]+)"/g,
     /srcset="([^"]+)"/g,
-    /url\((https:\/\/framerusercontent\.com[^)]+)\)/g,
-    /href="(https:\/\/framerusercontent\.com[^"]+\.(?:png|jpg|jpeg|gif|svg|webp|ico))"/gi,
+    // CSS url() — may be quoted: url("…"), url('…'), or url(…). Includes fonts.
+    /url\((['"]?https:\/\/framerusercontent\.com[^)]+?['"]?)\)/g,
+    /href="(https:\/\/framerusercontent\.com[^"]+\.(?:png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|otf))"/gi,
   ];
 
   for (const pattern of patterns) {
     for (const match of html.matchAll(pattern)) {
       const value = match[1];
-      if (value.includes(" ")) {
+      if (value.includes(",") && value.includes(" ")) {
+        // srcset: comma-separated "url 512w" descriptors
         value.split(",").forEach((part) => {
           const url = part.trim().split(/\s+/)[0];
-          if (url.startsWith("https://")) urls.add(url.split("?")[0]);
+          if (url.startsWith("https://")) urls.add(cleanUrl(url));
         });
       } else {
-        urls.add(value.split("?")[0]);
+        const url = cleanUrl(value);
+        if (url.startsWith("https://")) urls.add(url);
       }
     }
   }

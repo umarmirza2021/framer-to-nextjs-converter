@@ -2,7 +2,13 @@ import type { FramerPage, FramerSite } from "./types";
 import { downloadAssetsParallel } from "./fetcher";
 import { extractAssetUrls, localizeAssets } from "./html-to-jsx";
 import { optimizeSiteImages, type OptimizeResult } from "./optimize-images";
-import { stripFramerRuntime } from "./strip-runtime";
+import { stripFramerRuntime, optimizeImageLoading } from "./strip-runtime";
+
+// Safe CSS minify: strip comments + collapse whitespace (keeps single spaces,
+// so selectors/values stay valid — no risky punctuation stripping).
+function minifyCss(css: string): string {
+  return css.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s+/g, " ").trim();
+}
 
 export type GenerateOptions = {
   downloadAssets?: boolean;
@@ -336,6 +342,11 @@ export async function generateNextJsProject(
     };
     Object.assign(files, optimized.files);
     imageStats = optimized.stats;
+
+    // Minify the (now localized) CSS for performance builds.
+    if (options.performanceMode) {
+      activeSite = { ...activeSite, styles: activeSite.styles.map(minifyCss) };
+    }
   } else if (options.downloadAssets) {
     const downloaded = await downloadAssetsParallel(assetUrls);
     let assetIndex = 0;
@@ -360,7 +371,10 @@ export async function generateNextJsProject(
     const docName = toComponentName(page.path) + "Document";
 
     let html = buildHtmlDocument(page, activeSite);
-    if (options.performanceMode) html = stripFramerRuntime(html);
+    if (options.performanceMode) {
+      html = stripFramerRuntime(html);
+      html = optimizeImageLoading(html);
+    }
 
     files[`lib/framer/${docName}.ts`] = `export const framerHtml = ${JSON.stringify(html)};\n`;
     files[

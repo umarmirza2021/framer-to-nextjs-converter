@@ -30,3 +30,40 @@ export function stripFramerRuntime(html: string): string {
 
   return $.html();
 }
+
+/**
+ * Prioritize the likely LCP image and defer the rest:
+ *  - first content image  -> fetchpriority=high + eager + a <link rel=preload>
+ *  - first few (above-fold) -> stay eager
+ *  - the rest             -> loading=lazy + decoding=async
+ * Improves LCP without changing any visuals.
+ */
+export function optimizeImageLoading(html: string): string {
+  const $ = cheerio.load(html);
+  const imgs = $("body img").toArray();
+  let preloadHref = "";
+
+  imgs.forEach((el, index) => {
+    const $img = $(el);
+    const src = $img.attr("src") || "";
+
+    if (index === 0 && src) {
+      $img.attr("fetchpriority", "high");
+      $img.attr("loading", "eager");
+      preloadHref = src;
+    } else if (index < 3) {
+      $img.attr("loading", "eager"); // above-the-fold, don't defer
+    } else if (!$img.attr("loading")) {
+      $img.attr("loading", "lazy");
+      $img.attr("decoding", "async");
+    }
+  });
+
+  if (preloadHref) {
+    $("head").append(
+      `<link rel="preload" as="image" href="${preloadHref}" fetchpriority="high" />`
+    );
+  }
+
+  return $.html();
+}
