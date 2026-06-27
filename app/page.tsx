@@ -3,24 +3,28 @@ import Header from "@/components/Header";
 
 const features = [
   {
-    title: "Full page extraction",
-    desc: "Pulls SSR HTML, CSS, meta tags, and fonts from your published Framer site.",
+    title: "Strips the heavy runtime",
+    desc: "Removes Framer's JavaScript engine so pages render instantly — the biggest mobile speed win.",
+  },
+  {
+    title: "Optimized images",
+    desc: "Every image is downloaded, re-encoded to WebP, and self-hosted — typically ~70% smaller.",
+  },
+  {
+    title: "Self-hosted assets",
+    desc: "Fonts and media are bundled and served from your own edge — no dependency on Framer's CDN.",
+  },
+  {
+    title: "Static, edge-ready",
+    desc: "Pre-rendered HTML served from a global CDN for near-instant first paint and strong SEO.",
+  },
+  {
+    title: "One-click deploy",
+    desc: "Push straight to Netlify or Vercel, or download the full project to host anywhere.",
   },
   {
     title: "Multi-page support",
-    desc: "Discovers and converts all pages via Framer's search index.",
-  },
-  {
-    title: "Asset support",
-    desc: "Images and media load from Framer's CDN for fast, reliable conversions.",
-  },
-  {
-    title: "Live preview",
-    desc: "See the converted site in your browser before downloading — animations and layout included.",
-  },
-  {
-    title: "Deploy-ready zip",
-    desc: "Downloads a complete Next.js project — unzip, npm install, and deploy to Vercel or Netlify.",
+    desc: "Discovers and converts every page of your site automatically via Framer's index.",
   },
 ];
 
@@ -31,13 +35,13 @@ export default function Home() {
       <main className="ftn-page">
         <header className="ftn-hero">
           <h1 className="ftn-title">
-            Convert Framer sites
+            Make your Framer site
             <br />
-            to <span className="ftn-gradient">Next.js</span>
+            <span className="ftn-gradient">load faster.</span>
           </h1>
           <p className="ftn-subtitle">
-            Paste your Framer URL and get a ready-to-run Next.js project — pages, styles, assets, and
-            animations included.
+            Paste your Framer URL. We convert it to an optimized Next.js site — stripped of the heavy
+            runtime, with self-hosted images and fonts — then deploy it for you.
           </p>
           <ConverterForm />
         </header>
@@ -55,19 +59,19 @@ export default function Home() {
           <h2>How it works</h2>
           <ol>
             <li>
-              <strong>Fetch</strong> — Downloads your published Framer site HTML
+              <strong>Fetch</strong> — Downloads your published Framer site and discovers every page
             </li>
             <li>
-              <strong>Parse</strong> — Extracts SSR content, CSS, meta data, and page routes
+              <strong>Optimize</strong> — Strips the Framer runtime, re-encodes images to WebP, and self-hosts fonts
             </li>
             <li>
-              <strong>Convert</strong> — Builds a pure HTML Next.js route with full Framer animations
+              <strong>Generate</strong> — Builds a static, edge-ready site tuned for top Lighthouse scores
             </li>
             <li>
               <strong>Preview</strong> — Opens a live browser preview so you can check the result first
             </li>
             <li>
-              <strong>Download</strong> — Saves a zip with everything you need to deploy
+              <strong>Deploy</strong> — Ships straight to Netlify or Vercel, or downloads the full project
             </li>
           </ol>
         </section>
