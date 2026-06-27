@@ -66,7 +66,7 @@ export async function POST(
     let filesJson = project.filesJson;
     try {
       const optimized = await convertFramerToNextJs(project.framerUrl, {
-        optimizeImages: true,
+        performanceMode: true,
       });
       filesJson = serializeFiles(optimized.files);
     } catch {

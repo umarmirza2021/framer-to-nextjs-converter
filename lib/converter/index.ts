@@ -7,12 +7,13 @@ import type { ConversionResult } from "./types";
 
 export async function convertFramerToNextJs(
   url: string,
-  options: { optimizeImages?: boolean } = {}
+  options: { optimizeImages?: boolean; performanceMode?: boolean } = {}
 ): Promise<ConversionResult> {
   const site = await parseFramerSite(url);
   const { files, assetCount } = await generateNextJsProject(site, {
     downloadAssets: false,
     optimizeImages: options.optimizeImages,
+    performanceMode: options.performanceMode,
   });
 
   const cssSize = site.styles.reduce((sum, s) => sum + s.length, 0);
@@ -30,7 +31,7 @@ export async function convertFramerToNextJs(
 
 export async function convertAndZip(
   url: string,
-  options: { optimizeImages?: boolean } = {}
+  options: { optimizeImages?: boolean; performanceMode?: boolean } = {}
 ): Promise<{ zip: Buffer; stats: ConversionResult["stats"]; siteName: string }> {
   const result = await convertFramerToNextJs(url, options);
   const zip = await createZip(result.files);

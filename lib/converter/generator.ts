@@ -2,11 +2,18 @@ import type { FramerPage, FramerSite } from "./types";
 import { downloadAssetsParallel } from "./fetcher";
 import { extractAssetUrls, localizeAssets } from "./html-to-jsx";
 import { optimizeSiteImages, type OptimizeResult } from "./optimize-images";
+import { stripFramerRuntime } from "./strip-runtime";
 
 export type GenerateOptions = {
   downloadAssets?: boolean;
   /** Download images, re-encode to WebP, self-host them, and rewrite all URLs. */
   optimizeImages?: boolean;
+  /**
+   * Performance Mode: optimize images AND strip Framer's JS runtime so the page
+   * renders as a fast static document. Trades entrance animations / JS
+   * interactions for a much faster mobile load.
+   */
+  performanceMode?: boolean;
 };
 
 function slugify(path: string): string {
@@ -140,10 +147,6 @@ ${appearAnimations}${appearBreakpoints}${appearInit}${mainBundle}${handover}  </
 </html>`;
 }
 
-function generateDocumentModule(docName: string, page: FramerPage, site: FramerSite): string {
-  const html = buildHtmlDocument(page, site);
-  return `export const framerHtml = ${JSON.stringify(html)};\n`;
-}
 
 function relativeImportPath(pagePath: string, docName: string): string {
   const segments =
@@ -322,7 +325,7 @@ export async function generateNextJsProject(
   let activeSite = site;
   let imageStats: OptimizeResult["stats"] | undefined;
 
-  if (options.optimizeImages) {
+  if (options.optimizeImages || options.performanceMode) {
     // Download + re-encode images to WebP, self-host them, rewrite all URLs.
     const optimized = await optimizeSiteImages(site);
     const map = optimized.assetMap;
@@ -356,7 +359,10 @@ export async function generateNextJsProject(
   for (const page of activeSite.pages) {
     const docName = toComponentName(page.path) + "Document";
 
-    files[`lib/framer/${docName}.ts`] = generateDocumentModule(docName, page, activeSite);
+    let html = buildHtmlDocument(page, activeSite);
+    if (options.performanceMode) html = stripFramerRuntime(html);
+
+    files[`lib/framer/${docName}.ts`] = `export const framerHtml = ${JSON.stringify(html)};\n`;
     files[
       page.path === "/" || page.path === ""
         ? "app/route.ts"
