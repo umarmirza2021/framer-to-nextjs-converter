@@ -1,8 +1,3 @@
-import type {
-  CmsDetectionResult,
-  DetectedCmsCollection,
-} from "@/lib/cms/framer-detector";
-import { seedCmsFromDetection } from "@/lib/cms/seed-from-framer";
 import { getCached } from "@/lib/converter/cache";
 import { prisma } from "@/lib/prisma";
 import type { ConversionResult } from "@/lib/converter/types";
@@ -16,7 +11,7 @@ interface SaveProjectInput {
   stats: ConversionResult["stats"];
 }
 
-function serializeFiles(files: Record<string, string | Buffer>): string {
+export function serializeFiles(files: Record<string, string | Buffer>): string {
   const serialized: Record<string, string | { type: "buffer"; data: string }> = {};
   for (const [path, content] of Object.entries(files)) {
     if (Buffer.isBuffer(content)) {
@@ -48,22 +43,7 @@ export async function saveProjectFromCache(input: SaveProjectInput) {
     },
   });
 
-  let cmsCollectionsCreated = 0;
-  if (cached.cmsDetection) {
-    try {
-      const parsed = JSON.parse(cached.cmsDetection) as
-        | CmsDetectionResult
-        | DetectedCmsCollection[];
-      const collections = Array.isArray(parsed) ? parsed : parsed.collections;
-      cmsCollectionsCreated = await seedCmsFromDetection(project.id, collections, {
-        replace: true,
-      });
-    } catch {
-      // CMS seed is best-effort
-    }
-  }
-
-  return { project, cmsCollectionsCreated };
+  return { project };
 }
 
 export function deserializeFiles(

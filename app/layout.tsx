@@ -3,15 +3,15 @@ import Providers from "@/components/Providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Framer to Next.js Converter",
-  description: "Convert any Framer website into a downloadable Next.js project in seconds.",
+  title: "Framer → Next.js — Make your Framer site load faster",
+  description:
+    "Paste your Framer URL and get an optimized, static Next.js site — stripped of the heavy runtime, with self-hosted images and fonts. Deploy in one click.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="stylesheet" href="/app.css" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

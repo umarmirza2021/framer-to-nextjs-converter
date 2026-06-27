@@ -12,6 +12,7 @@ preview-site/
 prisma/dev.db
 prisma/dev.db-journal
 uploads/
+public/cms-media/
 .DS_Store
 *.log
 tsconfig.tsbuildinfo

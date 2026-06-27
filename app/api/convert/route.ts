@@ -28,7 +28,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid URL format." }, { status: 400 });
     }
 
-    const { zip, stats, siteName } = await convertAndZip(normalizedUrl);
+    const { zip, stats, siteName } = await convertAndZip(normalizedUrl, {
+      performanceMode: true,
+    });
 
     return new NextResponse(new Uint8Array(zip), {
       status: 200,

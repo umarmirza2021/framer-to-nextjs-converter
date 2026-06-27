@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    const { project, cmsCollectionsCreated } = await saveProjectFromCache({
+    const { project } = await saveProjectFromCache({
       userId: session.user.id,
       ...parsed.data,
       title: parsed.data.title || "Untitled Project",
@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
         siteName: project.siteName,
         createdAt: project.createdAt,
       },
-      cmsCollectionsCreated,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to save project";

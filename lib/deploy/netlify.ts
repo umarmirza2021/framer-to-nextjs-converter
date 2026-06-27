@@ -1,5 +1,6 @@
 import { createZip } from "@/lib/converter/zip";
 import { deserializeFiles } from "@/lib/projects";
+import { buildStaticBundle } from "./static";
 
 interface NetlifyDeployResult {
   url: string;
@@ -12,7 +13,9 @@ export async function deployToNetlify(
   siteName: string,
   filesJson: string
 ): Promise<NetlifyDeployResult> {
-  const files = deserializeFiles(filesJson);
+  // Deploy a static site (real .html files), not the Next.js source — Netlify's
+  // direct zip upload does not run a build, so source files would 404.
+  const files = buildStaticBundle(deserializeFiles(filesJson));
   const zip = await createZip(files);
 
   const sanitizedName = siteName

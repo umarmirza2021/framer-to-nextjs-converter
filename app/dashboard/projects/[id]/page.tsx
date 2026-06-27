@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import ProjectActions from "@/components/ProjectActions";
 import DeployPanel from "@/components/DeployPanel";
-import styles from "@/components/cms/cms.module.css";
+import styles from "@/components/shared-ui.module.css";
 import dashStyles from "../../dashboard.module.css";
 
 export default async function ProjectDetailPage({
@@ -39,9 +39,6 @@ export default async function ProjectDetailPage({
           className={`${styles.tab} ${styles.tabActive}`}
         >
           Preview
-        </Link>
-        <Link href={`/dashboard/projects/${id}/cms`} className={styles.tab}>
-          CMS
         </Link>
         <Link href="/dashboard/settings" className={styles.tab}>
           Integrations

@@ -1,27 +1,34 @@
 import ConverterForm from "@/components/ConverterForm";
 import Header from "@/components/Header";
+import { Zap, ImageIcon, TypeIcon, Globe, ArrowRight } from "@/components/Icons";
 
-const features = [
+const optimizations = [
   {
-    title: "Full page extraction",
-    desc: "Pulls SSR HTML, CSS, meta tags, and fonts from your published Framer site.",
+    icon: Zap,
+    title: "Removes Framer's runtime",
+    desc: "Strips the heavy JavaScript engine so pages render instantly. The single biggest mobile win.",
   },
   {
-    title: "Multi-page support",
-    desc: "Discovers and converts all pages via Framer's search index.",
+    icon: ImageIcon,
+    title: "Re-encodes every image",
+    desc: "Downloads and converts images to WebP, self-hosted — typically ~70% smaller for a faster LCP.",
   },
   {
-    title: "Asset support",
-    desc: "Images and media load from Framer's CDN for fast, reliable conversions.",
+    icon: TypeIcon,
+    title: "Self-hosts your fonts",
+    desc: "Inlines fonts with display-swap to kill the loading waterfall and prevent layout shift.",
   },
   {
-    title: "Live preview",
-    desc: "See the converted site in your browser before downloading — animations and layout included.",
+    icon: Globe,
+    title: "Ships to the edge",
+    desc: "Pre-rendered static HTML served from a global CDN — near-instant first byte and strong SEO.",
   },
-  {
-    title: "Deploy-ready zip",
-    desc: "Downloads a complete Next.js project — unzip, npm install, and deploy to Vercel or Netlify.",
-  },
+];
+
+const steps = [
+  { n: "1", title: "Paste", desc: "Drop in any published Framer URL." },
+  { n: "2", title: "Optimize", desc: "We strip, compress, and self-host everything automatically." },
+  { n: "3", title: "Deploy", desc: "Ship to Netlify or Vercel, or download the project." },
 ];
 
 export default function Home() {
@@ -29,53 +36,66 @@ export default function Home() {
     <>
       <Header />
       <main className="ftn-page">
-        <header className="ftn-hero">
+        <section className="ftn-hero">
+          <span className="ftn-badge">
+            <Zap size={13} /> Framer → Next.js performance optimizer
+          </span>
           <h1 className="ftn-title">
-            Convert Framer sites
+            Make your Framer site
             <br />
-            to <span className="ftn-gradient">Next.js</span>
+            <span className="ftn-gradient">load faster.</span>
           </h1>
           <p className="ftn-subtitle">
-            Paste your Framer URL and get a ready-to-run Next.js project — pages, styles, assets, and
-            animations included.
+            Paste your Framer URL. We rebuild it as an optimized, static Next.js site —
+            then deploy it. No code, no cleanup.
           </p>
           <ConverterForm />
-        </header>
-
-        <section className="ftn-features">
-          {features.map((f) => (
-            <div key={f.title} className="ftn-feature-card">
-              <h3>{f.title}</h3>
-              <p>{f.desc}</p>
-            </div>
-          ))}
+          <p className="ftn-trust">
+            Works with any published Framer site · No account needed to preview
+          </p>
         </section>
 
-        <section className="ftn-how-it-works">
-          <h2>How it works</h2>
-          <ol>
-            <li>
-              <strong>Fetch</strong> — Downloads your published Framer site HTML
-            </li>
-            <li>
-              <strong>Parse</strong> — Extracts SSR content, CSS, meta data, and page routes
-            </li>
-            <li>
-              <strong>Convert</strong> — Builds a pure HTML Next.js route with full Framer animations
-            </li>
-            <li>
-              <strong>Preview</strong> — Opens a live browser preview so you can check the result first
-            </li>
-            <li>
-              <strong>Download</strong> — Saves a zip with everything you need to deploy
-            </li>
-          </ol>
+        <section className="ftn-section">
+          <h2 className="ftn-section-title">What we optimize</h2>
+          <p className="ftn-section-sub">
+            Four automatic passes that move your Lighthouse score — every time.
+          </p>
+          <div className="ftn-features">
+            {optimizations.map((o) => {
+              const Icon = o.icon;
+              return (
+                <div key={o.title} className="ftn-feature-card">
+                  <span className="ftn-feature-icon">
+                    <Icon size={18} />
+                  </span>
+                  <h3>{o.title}</h3>
+                  <p>{o.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="ftn-section">
+          <h2 className="ftn-section-title">How it works</h2>
+          <div className="ftn-steps">
+            {steps.map((s, i) => (
+              <div key={s.n} className="ftn-step-card">
+                <span className="ftn-step-num">{s.n}</span>
+                <div>
+                  <h3>{s.title}</h3>
+                  <p>{s.desc}</p>
+                </div>
+                {i < steps.length - 1 && <ArrowRight size={18} className="ftn-step-arrow" />}
+              </div>
+            ))}
+          </div>
         </section>
 
         <footer className="ftn-footer">
           <p>
-            Works with <code>*.framer.website</code> URLs. Custom domains supported when they resolve to
-            Framer.
+            Works with <code>*.framer.website</code>, <code>*.framer.app</code>, and custom
+            domains that resolve to Framer.
           </p>
         </footer>
       </main>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dashStyles from "@/app/dashboard/dashboard.module.css";
-import styles from "./cms/cms.module.css";
+import styles from "./shared-ui.module.css";
 
 interface Account {
   platform: string;

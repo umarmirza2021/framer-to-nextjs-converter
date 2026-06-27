@@ -3,6 +3,14 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { Check, Download, ExternalLink } from "@/components/Icons";
+
+const buildIncludes = [
+  "Framer JavaScript runtime removed",
+  "Images re-encoded to WebP & self-hosted",
+  "Fonts self-hosted with display-swap",
+  "Static HTML, edge-ready for deploy",
+];
 
 
 type Status = "idle" | "converting" | "preview" | "error";
@@ -11,20 +19,6 @@ interface ConvertStats {
   pages: number;
   assets: number;
   cssSize: number;
-}
-
-interface CmsPreviewInfo {
-  status: "found" | "no_cms" | "parse_failed";
-  message: string;
-  collectionCount: number;
-  fieldCount: number;
-  entryCount: number;
-  collections: Array<{
-    name: string;
-    fieldCount: number;
-    entryCount: number;
-    fields: string[];
-  }>;
 }
 
 export default function ConverterForm() {
@@ -40,7 +34,6 @@ export default function ConverterForm() {
   const [downloadError, setDownloadError] = useState("");
   const [savedProjectId, setSavedProjectId] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState("");
-  const [cmsInfo, setCmsInfo] = useState<CmsPreviewInfo | null>(null);
 
   async function handleConvert(e: React.FormEvent) {
     e.preventDefault();
@@ -54,7 +47,6 @@ export default function ConverterForm() {
     setSiteName("");
     setSavedProjectId(null);
     setSaveMessage("");
-    setCmsInfo(null);
 
     try {
       const response = await fetch("/api/preview", {
@@ -71,7 +63,6 @@ export default function ConverterForm() {
         stats?: ConvertStats;
         title?: string;
         siteName?: string;
-        cms?: CmsPreviewInfo;
       };
       try {
         data = JSON.parse(raw);
@@ -104,7 +95,6 @@ export default function ConverterForm() {
       setPreviewId(data.previewId);
       setTitle(data.title || "");
       setSiteName(data.siteName || "");
-      setCmsInfo(data.cms ?? null);
       setStatus("preview");
 
       if (session?.user) {
@@ -123,11 +113,7 @@ export default function ConverterForm() {
           const saveData = await saveRes.json();
           if (saveRes.ok && saveData.project?.id) {
             setSavedProjectId(saveData.project.id);
-            const cmsNote =
-              saveData.cmsCollectionsCreated > 0
-                ? ` · ${saveData.cmsCollectionsCreated} CMS collection(s) auto-created`
-                : "";
-            setSaveMessage(`Saved to your dashboard${cmsNote}`);
+            setSaveMessage("Saved to your dashboard");
           }
         } catch {
           setSaveMessage("Preview ready — could not save to dashboard");
@@ -225,102 +211,72 @@ export default function ConverterForm() {
 
       {showPreview && stats && (
         <div className="ftn-preview-section">
-          <div className="ftn-status-card ftn-status-card--success">
-            <div className="ftn-status-icon">✓</div>
-            <div className="ftn-preview-header">
-              <p className="ftn-status-title">
-                {title ? `Preview: ${title}` : "Preview ready"}
-              </p>
-              <p className="ftn-status-detail">
-                {stats.pages} page{stats.pages !== 1 ? "s" : ""} · {stats.assets} asset
-                {stats.assets !== 1 ? "s" : ""} · {(stats.cssSize / 1024).toFixed(0)} KB CSS
-                {saveMessage && (
+          <div className="ftn-result-card">
+            <div className="ftn-result-head">
+              <span className="ftn-result-check">
+                <Check size={16} />
+              </span>
+              <div className="ftn-result-headtext">
+                <p className="ftn-result-title">{title || "Your site"} is ready</p>
+                <p className="ftn-result-meta">
+                  {stats.pages} page{stats.pages !== 1 ? "s" : ""} captured and optimized
+                </p>
+              </div>
+              {savedProjectId && (
+                <Link className="ftn-result-dashlink" href={`/dashboard/projects/${savedProjectId}`}>
+                  View in dashboard
+                </Link>
+              )}
+            </div>
+
+            <ul className="ftn-optim-list">
+              {buildIncludes.map((item) => (
+                <li key={item}>
+                  <Check size={15} className="ftn-optim-check" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+
+            <div className="ftn-result-actions">
+              <button
+                type="button"
+                className="ftn-btn-primary"
+                onClick={handleDownload}
+                disabled={downloading}
+              >
+                {downloading ? (
                   <>
-                    {" "}
-                    · <span className="ftn-saved-badge">{saveMessage}</span>
+                    <span className="ftn-spinner" />
+                    Preparing…
+                  </>
+                ) : (
+                  <>
+                    <Download size={16} />
+                    Download project
                   </>
                 )}
-              </p>
-              {savedProjectId && (
-                <p className="ftn-dashboard-link">
-                  <Link href={`/dashboard/projects/${savedProjectId}`}>
-                    View in dashboard →
-                  </Link>
-                </p>
-              )}
-              <div className="ftn-preview-actions">
-                <button
-                  type="button"
-                  className="ftn-download-btn"
-                  onClick={handleDownload}
-                  disabled={downloading}
-                >
-                  {downloading ? (
-                    <>
-                      <span className="ftn-spinner" />
-                      Downloading…
-                    </>
-                  ) : (
-                    "Download Next.js Project"
-                  )}
-                </button>
-                <a
-                  href={`/api/preview/${previewId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ftn-open-tab-link"
-                >
-                  Open in new tab
-                </a>
-              </div>
-              {downloadError && (
-                <p className="ftn-download-error">{downloadError}</p>
-              )}
+              </button>
+              <a
+                href={`/api/preview/${previewId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ftn-btn-secondary"
+              >
+                <ExternalLink size={15} />
+                Open full preview
+              </a>
+              {saveMessage && <span className="ftn-saved-badge">{saveMessage}</span>}
             </div>
+            {downloadError && <p className="ftn-download-error">{downloadError}</p>}
           </div>
-
-          {cmsInfo && (
-            <div
-              className={`ftn-status-card ftn-cms-card ftn-cms-card--${cmsInfo.status}`}
-            >
-              <div className="ftn-status-icon">
-                {cmsInfo.status === "found" ? "◆" : cmsInfo.status === "parse_failed" ? "!" : "○"}
-              </div>
-              <div>
-                <p className="ftn-status-title">
-                  {cmsInfo.status === "found"
-                    ? `CMS detected: ${cmsInfo.collectionCount} collection${cmsInfo.collectionCount !== 1 ? "s" : ""}, ${cmsInfo.fieldCount} field${cmsInfo.fieldCount !== 1 ? "s" : ""}, ${cmsInfo.entryCount} entr${cmsInfo.entryCount !== 1 ? "ies" : "y"}`
-                    : cmsInfo.status === "parse_failed"
-                      ? "CMS found but could not be parsed"
-                      : "No Framer CMS detected"}
-                </p>
-                <p className="ftn-status-detail">{cmsInfo.message}</p>
-                {cmsInfo.status === "found" && cmsInfo.collections.length > 0 && (
-                  <ul className="ftn-cms-list">
-                    {cmsInfo.collections.map((collection) => (
-                      <li key={collection.name}>
-                        <strong>{collection.name}</strong> — {collection.fields.join(", ")}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {cmsInfo.status === "no_cms" && savedProjectId && (
-                  <p className="ftn-cms-hint">
-                    <Link href={`/dashboard/projects/${savedProjectId}/cms`}>
-                      Create CMS collections manually →
-                    </Link>
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
 
           <div className="ftn-preview-frame-wrap">
             <div className="ftn-preview-frame-header">
               <span className="ftn-preview-dot" />
               <span className="ftn-preview-dot" />
               <span className="ftn-preview-dot" />
-              <span className="ftn-preview-url">Live preview</span>
+              <span className="ftn-preview-url">Live preview · {siteName || "converted site"}</span>
             </div>
             <iframe
               src={`/api/preview/${previewId}`}

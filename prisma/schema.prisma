@@ -8,7 +8,6 @@ datasource db {
 }
 
 // ProjectStatus: DRAFT | READY | DEPLOYED
-// CmsFieldType: PLAIN_TEXT | FORMATTED_TEXT | DATE | LINK | IMAGE | GALLERY | COLOR | TOGGLE | NUMBER | OPTION | FILE | VECTOR_SET | REFERENCE | MULTI_REFERENCE | DIVIDER
 // Platform: NETLIFY | VERCEL
 // DeploymentStatus: PENDING | BUILDING | READY | FAILED
 
@@ -37,52 +36,9 @@ model Project {
   cacheId        String?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
-  cmsCollections CmsCollection[]
   deployments    Deployment[]
 
   @@index([userId])
-}
-
-model CmsCollection {
-  id        String     @id @default(cuid())
-  projectId String
-  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  name      String
-  slug      String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  fields    CmsField[]
-  entries   CmsEntry[]
-
-  @@unique([projectId, slug])
-}
-
-model CmsField {
-  id              String        @id @default(cuid())
-  collectionId    String
-  collection      CmsCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  name            String
-  slug            String
-  type            String
-  required        Boolean       @default(false)
-  options         String?
-  refCollectionId String?
-  sortOrder       Int           @default(0)
-
-  @@unique([collectionId, slug])
-}
-
-model CmsEntry {
-  id           String        @id @default(cuid())
-  collectionId String
-  collection   CmsCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  slug         String
-  values       String
-  published    Boolean       @default(false)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-
-  @@unique([collectionId, slug])
 }
 
 model DeploymentAccount {
@@ -107,4 +63,99 @@ model Deployment {
   status    String   @default("PENDING")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────
+// CMS (Framer-style content management)
+// Field type:   text | rich-text | image | date | boolean | number | url | color | reference
+// Page type:    index | detail
+// Layer type:   text | image | background-image | href
+// ─────────────────────────────────────────────────────────────
+
+model CmsCollection {
+  id        String       @id @default(cuid())
+  name      String
+  slug      String       @unique
+  fields    CmsField[]
+  items     CmsItem[]
+  pages     CmsPage[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model CmsField {
+  id           String        @id @default(cuid())
+  collectionId String
+  collection   CmsCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  name         String
+  key          String
+  type         String
+  required     Boolean       @default(false)
+  defaultValue Json?
+  sortOrder    Int           @default(0)
+
+  @@unique([collectionId, key])
+  @@index([collectionId])
+}
+
+model CmsItem {
+  id           String        @id @default(cuid())
+  collectionId String
+  collection   CmsCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  slug         String
+  data         Json
+  published    Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([collectionId, slug])
+  @@index([collectionId])
+}
+
+model CmsPage {
+  id            String        @id @default(cuid())
+  collectionId  String
+  collection    CmsCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  pageType      String
+  framerPageId  String
+  route         String
+  template      String        @default("") // Framer HTML for this page (card for index, layout for detail)
+  repeatLayerId String? // index pages: data-framer-name of the card to repeat per item
+  bindings      CmsBinding[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([collectionId])
+}
+
+model CmsBinding {
+  id           String  @id @default(cuid())
+  pageId       String
+  page         CmsPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  layerId      String
+  layerType    String
+  collectionId String
+  fieldKey     String
+  pageType     String
+
+  @@index([pageId])
+}
+
+// Key/value store for admin settings (deploy tokens, auto-deploy, media provider).
+model CmsSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+// History log of CMS-triggered deployments.
+model CmsDeployment {
+  id        String   @id @default(cuid())
+  platform  String // vercel | netlify
+  status    String   @default("triggered")
+  url       String?
+  deployId  String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }

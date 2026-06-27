@@ -1,5 +1,3 @@
-import { detectFramerCmsWithDiagnostics } from "@/lib/cms/framer-detector";
-import type { CmsDetectionResult } from "@/lib/cms/framer-detector";
 import { getCached, storeConversion } from "./cache";
 import { formatConversionError } from "./errors";
 import { buildHtmlDocument, generateNextJsProject } from "./generator";
@@ -7,10 +5,15 @@ import { parseFramerSite } from "./parser";
 import { createZip } from "./zip";
 import type { ConversionResult } from "./types";
 
-export async function convertFramerToNextJs(url: string): Promise<ConversionResult> {
+export async function convertFramerToNextJs(
+  url: string,
+  options: { optimizeImages?: boolean; performanceMode?: boolean } = {}
+): Promise<ConversionResult> {
   const site = await parseFramerSite(url);
   const { files, assetCount } = await generateNextJsProject(site, {
     downloadAssets: false,
+    optimizeImages: options.optimizeImages,
+    performanceMode: options.performanceMode,
   });
 
   const cssSize = site.styles.reduce((sum, s) => sum + s.length, 0);
@@ -26,8 +29,11 @@ export async function convertFramerToNextJs(url: string): Promise<ConversionResu
   };
 }
 
-export async function convertAndZip(url: string): Promise<{ zip: Buffer; stats: ConversionResult["stats"]; siteName: string }> {
-  const result = await convertFramerToNextJs(url);
+export async function convertAndZip(
+  url: string,
+  options: { optimizeImages?: boolean; performanceMode?: boolean } = {}
+): Promise<{ zip: Buffer; stats: ConversionResult["stats"]; siteName: string }> {
+  const result = await convertFramerToNextJs(url, options);
   const zip = await createZip(result.files);
   const siteName = new URL(result.site.url).hostname.replace(/\./g, "-");
 
@@ -43,7 +49,6 @@ export async function convertForPreview(url: string): Promise<{
   stats: ConversionResult["stats"];
   siteName: string;
   title: string;
-  cms: CmsDetectionResult;
 }> {
   const result = await convertFramerToNextJs(url);
   const siteName = new URL(result.site.url).hostname.replace(/\./g, "-");
@@ -51,7 +56,6 @@ export async function convertForPreview(url: string): Promise<{
     result.site.pages.find((p) => p.path === "/" || p.path === "") ||
     result.site.pages[0];
   const previewHtml = buildHtmlDocument(homePage, result.site);
-  const cms = await detectFramerCmsWithDiagnostics(result.site);
 
   const previewId = await storeConversion({
     files: result.files,
@@ -59,7 +63,6 @@ export async function convertForPreview(url: string): Promise<{
     stats: result.stats,
     siteName,
     title: result.site.meta.title,
-    cmsDetection: JSON.stringify(cms),
   });
 
   return {
@@ -67,7 +70,6 @@ export async function convertForPreview(url: string): Promise<{
     stats: result.stats,
     siteName,
     title: result.site.meta.title,
-    cms,
   };
 }
 

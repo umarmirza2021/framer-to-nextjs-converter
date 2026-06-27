@@ -26,6 +26,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!parsed.success) return null;
 
         const { email, password } = parsed.data;
+
+        // Single-admin login via env (ADMIN_EMAIL + ADMIN_PASSWORD_HASH).
+        const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase();
+        const adminHash = process.env.ADMIN_PASSWORD_HASH;
+        if (adminEmail && adminHash && email.toLowerCase() === adminEmail) {
+          const validAdmin = await verifyPassword(password, adminHash);
+          if (!validAdmin) return null;
+          // Back the env-admin with a real User row so foreign keys (projects,
+          // deploy accounts) resolve. Reuse the existing account if present.
+          const adminUser = await prisma.user.upsert({
+            where: { email: adminEmail },
+            update: {},
+            create: { email: adminEmail, passwordHash: adminHash, name: "Admin" },
+          });
+          return { id: adminUser.id, email: adminUser.email, name: adminUser.name };
+        }
+
         const user = await prisma.user.findUnique({
           where: { email: email.toLowerCase() },
         });

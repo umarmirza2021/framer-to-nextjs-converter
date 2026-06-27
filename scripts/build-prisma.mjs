@@ -16,5 +16,7 @@ if (!hasDatabase) {
   process.exit(0);
 }
 
-console.log("Running prisma migrate deploy…");
-execSync("npx prisma migrate deploy", { stdio: "inherit" });
+// We use `db push` (no migrations folder), which syncs the schema and creates
+// any missing tables — auto-provisioning the database on first deploy.
+console.log("Syncing database schema (prisma db push)…");
+execSync("npx prisma db push --skip-generate --accept-data-loss", { stdio: "inherit" });
