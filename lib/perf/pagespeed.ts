@@ -6,13 +6,16 @@ export interface PageSpeedScores {
 }
 
 /**
- * Run Google PageSpeed Insights (real Lighthouse, mobile) for a public URL.
- * No API key needed at low volume. Used to show before/after proof.
+ * Run Google PageSpeed Insights (real Lighthouse) for a public URL on the given
+ * device. No API key needed at low volume. Used to show before/after proof.
  */
-export async function getPageSpeedScores(url: string): Promise<PageSpeedScores> {
+export async function getPageSpeedScores(
+  url: string,
+  strategy: "mobile" | "desktop" = "mobile"
+): Promise<PageSpeedScores> {
   const api =
     "https://www.googleapis.com/pagespeedonline/v5/runPagespeed?" +
-    `url=${encodeURIComponent(url)}&strategy=mobile` +
+    `url=${encodeURIComponent(url)}&strategy=${strategy}` +
     "&category=performance&category=accessibility&category=best-practices&category=seo" +
     (process.env.PAGESPEED_API_KEY ? `&key=${process.env.PAGESPEED_API_KEY}` : "");
 

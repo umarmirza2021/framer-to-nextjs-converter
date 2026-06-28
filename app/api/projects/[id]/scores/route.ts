@@ -52,11 +52,19 @@ export async function POST(
   }
 
   try {
-    const [before, after] = await Promise.all([
-      getPageSpeedScores(project.framerUrl),
-      getPageSpeedScores(afterUrl),
+    // Four Lighthouse runs in parallel: mobile + desktop, before + after.
+    const [mBefore, mAfter, dBefore, dAfter] = await Promise.all([
+      getPageSpeedScores(project.framerUrl, "mobile"),
+      getPageSpeedScores(afterUrl, "mobile"),
+      getPageSpeedScores(project.framerUrl, "desktop"),
+      getPageSpeedScores(afterUrl, "desktop"),
     ]);
-    const scores = { before, after, afterUrl, measuredAt: new Date().toISOString() };
+    const scores = {
+      mobile: { before: mBefore, after: mAfter },
+      desktop: { before: dBefore, after: dAfter },
+      afterUrl,
+      measuredAt: new Date().toISOString(),
+    };
     await prisma.project.update({ where: { id }, data: { perfScores: JSON.stringify(scores) } });
     return NextResponse.json({ scores });
   } catch (error) {
