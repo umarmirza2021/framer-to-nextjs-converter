@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import ProjectActions from "@/components/ProjectActions";
 import DeployPanel from "@/components/DeployPanel";
 import PerfScores from "@/components/PerfScores";
+import InteractionReport from "@/components/InteractionReport";
 import styles from "@/components/shared-ui.module.css";
 import dashStyles from "../../dashboard.module.css";
 
@@ -66,6 +67,7 @@ export default async function ProjectDetailPage({
 
       <DeployPanel projectId={project.id} />
       <PerfScores projectId={project.id} />
+      <InteractionReport projectId={project.id} />
     </main>
   );
 }
