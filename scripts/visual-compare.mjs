@@ -52,6 +52,17 @@ async function shoot(browser, url, width) {
   await page.setViewport({ width, height: 900, deviceScaleFactor: 1 });
   await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
   await autoScroll(page);
+  // Neutralize sticky/fixed so a full-page capture renders them at the same
+  // natural position on both sites (otherwise sticky nav/headers create a false
+  // mismatch in full-page screenshots — they behave identically for visitors).
+  await page.evaluate(() => {
+    document.querySelectorAll("*").forEach((e) => {
+      const p = getComputedStyle(e).position;
+      if ((p === "sticky" || p === "fixed") && e.style) e.style.position = "static";
+    });
+  });
+  await page.evaluate(() => document.fonts && document.fonts.ready); // avoid FOUT mismatch
+  await new Promise((r) => setTimeout(r, 500));
   const buf = await page.screenshot({ fullPage: true, type: "png" });
   await page.close();
   return buf;
