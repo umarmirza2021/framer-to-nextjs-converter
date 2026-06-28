@@ -19,7 +19,11 @@ export function enhanceInteractivity(html: string): string {
     const name = $f.attr("name") || `form-${i + 1}`;
     $f.attr("name", name);
     $f.attr("data-netlify", "true");
-    if (!$f.attr("method")) $f.attr("method", "POST");
+    $f.attr("method", "POST");
+    // Drop any external/Framer action so the POST goes to Netlify (which
+    // intercepts same-site form submissions), not to Framer's backend.
+    const action = $f.attr("action") || "";
+    if (/^https?:\/\//i.test(action)) $f.removeAttr("action");
     if ($f.find('input[name="form-name"]').length === 0) {
       $f.prepend(`<input type="hidden" name="form-name" value="${name}" />`);
     }

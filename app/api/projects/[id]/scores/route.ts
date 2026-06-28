@@ -37,14 +37,12 @@ export async function POST(
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 
-  // The live (after) URL: custom domain if set, else the latest deployment.
+  // The live (after) URL is the latest successful deployment.
   const lastDeploy = await prisma.deployment.findFirst({
     where: { projectId: id, status: "READY", url: { not: null } },
     orderBy: { createdAt: "desc" },
   });
-  const afterUrl = project.customDomain
-    ? `https://${project.customDomain}`
-    : lastDeploy?.url;
+  const afterUrl = lastDeploy?.url;
 
   if (!afterUrl) {
     return NextResponse.json(

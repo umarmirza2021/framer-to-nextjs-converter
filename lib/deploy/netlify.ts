@@ -88,30 +88,6 @@ export async function deployToNetlify(
   };
 }
 
-/** Point a custom domain at an existing Netlify site. */
-export async function setNetlifyCustomDomain(
-  accessToken: string,
-  siteId: string,
-  domain: string
-): Promise<{ domain: string; netlifyHost: string }> {
-  const res = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}`, {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ custom_domain: domain }),
-  });
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data?.message || `Couldn't set custom domain (${res.status})`);
-  }
-  return {
-    domain: data.custom_domain || domain,
-    netlifyHost: (data.default_domain || data.url || "").replace(/^https?:\/\//, ""),
-  };
-}
-
 export async function verifyNetlifyToken(accessToken: string): Promise<string> {
   const response = await fetch("https://api.netlify.com/api/v1/user", {
     headers: { Authorization: `Bearer ${accessToken}` },
