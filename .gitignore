@@ -16,3 +16,5 @@ public/cms-media/
 .DS_Store
 *.log
 tsconfig.tsbuildinfo
+# Visual fidelity report artifacts
+visual-report/
