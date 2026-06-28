@@ -41,11 +41,12 @@ export async function syncProject(projectId: string): Promise<SyncResult> {
     const previewHtml = homePage
       ? buildHtmlDocument(homePage, result.site)
       : project.previewHtml;
+    const filesJson = serializeFiles(result.files);
 
     await prisma.project.update({
       where: { id: projectId },
       data: {
-        filesJson: serializeFiles(result.files),
+        filesJson,
         stats: JSON.stringify(result.stats),
         previewHtml,
         contentHash: hash,
@@ -55,15 +56,29 @@ export async function syncProject(projectId: string): Promise<SyncResult> {
 
     // Auto-redeploy only if this project is already live somewhere.
     if (project.status === "DEPLOYED") {
-      const account = await prisma.deploymentAccount.findFirst({
-        where: { userId: project.userId },
+      // Redeploy to the SAME platform the project was last deployed to, so a
+      // user with both hosts connected doesn't get a redeploy to the wrong one.
+      const lastDeploy = await prisma.deployment.findFirst({
+        where: { projectId, status: "READY" },
+        orderBy: { createdAt: "desc" },
+        select: { platform: true },
       });
+      const platform = lastDeploy?.platform as "NETLIFY" | "VERCEL" | undefined;
+
+      const account = platform
+        ? await prisma.deploymentAccount.findUnique({
+            where: { userId_platform: { userId: project.userId, platform } },
+          })
+        : await prisma.deploymentAccount.findFirst({ where: { userId: project.userId } });
+
       if (account) {
         const fresh = await prisma.project.findUnique({ where: { id: projectId } });
+        // Reuse the build we just made — avoids converting the site a second time.
         const { url } = await runDeploy(
           fresh!,
           account,
-          account.platform as "NETLIFY" | "VERCEL"
+          account.platform as "NETLIFY" | "VERCEL",
+          filesJson
         );
         return { status: "deployed", url };
       }

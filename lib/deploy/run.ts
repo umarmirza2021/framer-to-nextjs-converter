@@ -17,23 +17,27 @@ type Platform = "NETLIFY" | "VERCEL";
 export async function runDeploy(
   project: Project,
   account: DeploymentAccount,
-  platform: Platform
+  platform: Platform,
+  prebuiltFilesJson?: string
 ): Promise<{ url: string; deploymentId: string }> {
   const deployment = await prisma.deployment.create({
     data: { projectId: project.id, platform, status: "BUILDING" },
   });
 
   try {
-    // Regenerate from source so the deploy reflects the latest content and
-    // self-hosts optimized assets. Fall back to stored files on failure.
-    let filesJson = project.filesJson;
-    try {
-      const optimized = await convertFramerToNextJs(project.framerUrl, {
-        performanceMode: true,
-      });
-      filesJson = serializeFiles(optimized.files);
-    } catch {
-      // keep stored filesJson
+    // Reuse a fresh build if the caller already produced one (the sync job does),
+    // otherwise regenerate from source so the deploy reflects the latest content.
+    // Fall back to stored files if a fresh conversion fails.
+    let filesJson = prebuiltFilesJson ?? project.filesJson;
+    if (!prebuiltFilesJson) {
+      try {
+        const optimized = await convertFramerToNextJs(project.framerUrl, {
+          performanceMode: true,
+        });
+        filesJson = serializeFiles(optimized.files);
+      } catch {
+        // keep stored filesJson
+      }
     }
 
     let url: string;
