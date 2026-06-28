@@ -3,6 +3,8 @@ generator client {
 }
 
 datasource db {
+  // Local dev uses SQLite (no install needed). For production, switch this to
+  // "postgresql" and point DATABASE_URL at your Postgres database.
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
@@ -34,6 +36,11 @@ model Project {
   filesJson      String
   previewHtml    String
   cacheId        String?
+  // Auto-sync: periodically re-check the Framer site and redeploy on change.
+  autoSync       Boolean         @default(false)
+  contentHash    String?         // fingerprint of the last-seen Framer HTML
+  lastCheckedAt  DateTime?       // last time we polled the source
+  lastSyncedAt   DateTime?       // last time content changed + we rebuilt
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   deployments    Deployment[]
@@ -91,7 +98,7 @@ model CmsField {
   key          String
   type         String
   required     Boolean       @default(false)
-  defaultValue Json?
+  defaultValue String? // JSON-encoded; portable across SQLite/Postgres
   sortOrder    Int           @default(0)
 
   @@unique([collectionId, key])
@@ -103,7 +110,7 @@ model CmsItem {
   collectionId String
   collection   CmsCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
   slug         String
-  data         Json
+  data         String // JSON-encoded item data; portable across SQLite/Postgres
   published    Boolean       @default(false)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt

@@ -25,6 +25,16 @@ type PrismaField = {
   sortOrder: number;
 };
 
+function parseJson<T>(value: unknown, fallback: T): T {
+  if (value == null) return fallback;
+  if (typeof value !== "string") return value as T; // already an object (e.g. Postgres Json)
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return fallback;
+  }
+}
+
 function mapField(f: PrismaField): CMSField {
   return {
     id: f.id,
@@ -32,7 +42,8 @@ function mapField(f: PrismaField): CMSField {
     key: f.key,
     type: f.type as CMSFieldType,
     required: f.required,
-    defaultValue: f.defaultValue ?? undefined,
+    defaultValue:
+      f.defaultValue == null ? undefined : parseJson<unknown>(f.defaultValue, undefined),
   };
 }
 
@@ -67,7 +78,7 @@ function mapItem(i: {
     id: i.id,
     collectionId: i.collectionId,
     slug: i.slug,
-    data: (i.data as Record<string, unknown>) ?? {},
+    data: parseJson<Record<string, unknown>>(i.data, {}),
     published: i.published,
     createdAt: i.createdAt.toISOString(),
     updatedAt: i.updatedAt.toISOString(),
@@ -114,7 +125,7 @@ function fieldCreateData(fields: FieldInput[]) {
     key: f.key ? keyify(f.key) : keyify(f.name),
     type: f.type,
     required: f.required ?? false,
-    defaultValue: (f.defaultValue ?? null) as never,
+    defaultValue: f.defaultValue == null ? null : JSON.stringify(f.defaultValue),
     sortOrder: index,
   }));
 }
@@ -247,7 +258,7 @@ export async function createItem(
     data: {
       collectionId,
       slug,
-      data: (input.data ?? {}) as never,
+      data: JSON.stringify(input.data ?? {}),
       published: input.published ?? false,
     },
   });
@@ -276,7 +287,7 @@ export async function updateItem(
     where: { id },
     data: {
       slug,
-      data: input.data !== undefined ? (input.data as never) : undefined,
+      data: input.data !== undefined ? JSON.stringify(input.data) : undefined,
       published: input.published ?? undefined,
     },
   });
