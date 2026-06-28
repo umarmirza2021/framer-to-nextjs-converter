@@ -25,6 +25,7 @@ export function stripFramerRuntime(html: string): string {
   $("head").append(
     "<style id=\"__no_js_reveal\">" +
       "[data-framer-appear-id]{opacity:1 !important;transform:none !important;filter:none !important;}" +
+      "html{scroll-behavior:smooth;}" + // restores smooth anchor scrolling without JS
       "</style>"
   );
 

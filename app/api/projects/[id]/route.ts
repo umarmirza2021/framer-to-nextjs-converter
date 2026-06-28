@@ -31,6 +31,8 @@ export async function GET(
       stats: JSON.parse(project.stats),
       status: project.status,
       autoSync: project.autoSync,
+      customDomain: project.customDomain,
+      isDeployed: !!project.netlifySiteId,
       lastCheckedAt: project.lastCheckedAt,
       lastSyncedAt: project.lastSyncedAt,
       createdAt: project.createdAt,

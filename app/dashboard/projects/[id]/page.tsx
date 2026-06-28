@@ -4,6 +4,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import ProjectActions from "@/components/ProjectActions";
 import DeployPanel from "@/components/DeployPanel";
+import PerfScores from "@/components/PerfScores";
+import DomainPanel from "@/components/DomainPanel";
 import AutoSyncPanel from "@/components/AutoSyncPanel";
 import styles from "@/components/shared-ui.module.css";
 import dashStyles from "../../dashboard.module.css";
@@ -65,6 +67,8 @@ export default async function ProjectDetailPage({
       />
 
       <DeployPanel projectId={project.id} />
+      <PerfScores projectId={project.id} />
+      <DomainPanel projectId={project.id} />
       <AutoSyncPanel projectId={project.id} />
     </main>
   );

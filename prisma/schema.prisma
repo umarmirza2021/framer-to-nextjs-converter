@@ -37,6 +37,8 @@ model Project {
   previewHtml    String
   cacheId        String?
   netlifySiteId  String?         // reuse the same Netlify site on every redeploy
+  customDomain   String?         // user's custom domain pointed at the site
+  perfScores     String?         // cached before/after Lighthouse scores (JSON)
   // Auto-sync: periodically re-check the Framer site and redeploy on change.
   autoSync       Boolean         @default(false)
   contentHash    String?         // fingerprint of the last-seen Framer HTML

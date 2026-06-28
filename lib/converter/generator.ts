@@ -3,6 +3,7 @@ import { downloadAssetsParallel } from "./fetcher";
 import { extractAssetUrls, localizeAssets } from "./html-to-jsx";
 import { optimizeSiteImages, type OptimizeResult } from "./optimize-images";
 import { stripFramerRuntime, optimizeImageLoading } from "./strip-runtime";
+import { enhanceInteractivity } from "./enhance-interactivity";
 
 // Safe CSS minify: strip comments + collapse whitespace (keeps single spaces,
 // so selectors/values stay valid — no risky punctuation stripping).
@@ -374,6 +375,7 @@ export async function generateNextJsProject(
     if (options.performanceMode) {
       html = stripFramerRuntime(html);
       html = optimizeImageLoading(html);
+      html = enhanceInteractivity(html);
     }
 
     files[`lib/framer/${docName}.ts`] = `export const framerHtml = ${JSON.stringify(html)};\n`;
