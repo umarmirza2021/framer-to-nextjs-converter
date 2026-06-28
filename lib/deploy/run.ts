@@ -41,11 +41,20 @@ export async function runDeploy(
     }
 
     let url: string;
+    let netlifySiteId: string | undefined;
     if (platform === "VERCEL") {
       const files = projectFilesToDeployList(filesJson);
       url = (await deployToVercel(account.accessToken, project.siteName, files)).url;
     } else {
-      url = (await deployToNetlify(account.accessToken, project.siteName, filesJson)).url;
+      // Pass the project's existing site so redeploys keep the same live URL.
+      const result = await deployToNetlify(
+        account.accessToken,
+        project.siteName,
+        filesJson,
+        project.netlifySiteId ?? undefined
+      );
+      url = result.url;
+      netlifySiteId = result.siteId;
     }
 
     await prisma.$transaction([
@@ -55,7 +64,11 @@ export async function runDeploy(
       }),
       prisma.project.update({
         where: { id: project.id },
-        data: { status: "DEPLOYED", filesJson },
+        data: {
+          status: "DEPLOYED",
+          filesJson,
+          ...(netlifySiteId ? { netlifySiteId } : {}),
+        },
       }),
     ]);
 
