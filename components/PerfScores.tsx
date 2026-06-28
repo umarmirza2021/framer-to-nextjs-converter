@@ -22,10 +22,10 @@ function color(n: number | null) {
   return "#dc2626";
 }
 
-function Ring({ label, value }: { label: string; value: number | null }) {
+function Ring({ label, value, big }: { label: string; value: number | null; big?: boolean }) {
   return (
-    <div style={{ textAlign: "center", minWidth: 70 }}>
-      <div style={{ fontSize: 28, fontWeight: 700, color: color(value), letterSpacing: "-0.02em" }}>
+    <div style={{ textAlign: "center", minWidth: 58 }}>
+      <div style={{ fontSize: big ? 30 : 24, fontWeight: 700, color: color(value), letterSpacing: "-0.02em" }}>
         {value ?? "—"}
       </div>
       <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{label}</div>
@@ -33,15 +33,52 @@ function Ring({ label, value }: { label: string; value: number | null }) {
   );
 }
 
-function Column({ title, scores, dim }: { title: string; scores: Scores; dim?: boolean }) {
+function Card({
+  badge,
+  title,
+  scores,
+  variant,
+}: {
+  badge: string;
+  title: string;
+  scores: Scores;
+  variant: "before" | "after";
+}) {
+  const after = variant === "after";
   return (
-    <div style={{ flex: 1, minWidth: 240, opacity: dim ? 0.7 : 1 }}>
-      <p style={{ fontSize: 13, fontWeight: 600, margin: "0 0 12px", color: "var(--text-secondary)" }}>{title}</p>
-      <div style={{ display: "flex", gap: 8, justifyContent: "space-between" }}>
-        <Ring label="Perf" value={scores.performance} />
-        <Ring label="A11y" value={scores.accessibility} />
-        <Ring label="Best" value={scores.bestPractices} />
-        <Ring label="SEO" value={scores.seo} />
+    <div
+      style={{
+        flex: 1,
+        minWidth: 250,
+        border: `1px solid ${after ? "var(--text)" : "var(--border)"}`,
+        borderRadius: 12,
+        padding: "16px 18px",
+        background: after ? "var(--surface)" : "var(--surface-2)",
+        opacity: after ? 1 : 0.85,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+        <span
+          style={{
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
+            padding: "2px 8px",
+            borderRadius: 999,
+            background: after ? "var(--text)" : "var(--border-strong)",
+            color: after ? "var(--accent-text)" : "var(--text)",
+          }}
+        >
+          {badge}
+        </span>
+        <span style={{ fontSize: 14, fontWeight: 600 }}>{title}</span>
+      </div>
+      <div style={{ display: "flex", gap: 6, justifyContent: "space-between" }}>
+        <Ring label="Perf" value={scores.performance} big={after} />
+        <Ring label="A11y" value={scores.accessibility} big={after} />
+        <Ring label="Best" value={scores.bestPractices} big={after} />
+        <Ring label="SEO" value={scores.seo} big={after} />
       </div>
     </div>
   );
@@ -100,15 +137,16 @@ export default function PerfScores({ projectId }: { projectId: string }) {
       {result && (
         <>
           {gain != null && gain > 0 && (
-            <p style={{ margin: "16px 0 4px", fontSize: 15 }}>
-              <strong style={{ color: "#16a34a" }}>+{gain} performance points</strong> on mobile 🚀
+            <p style={{ margin: "18px 0 10px", fontSize: 16, fontWeight: 600 }}>
+              <span style={{ color: "#16a34a" }}>+{gain} performance points</span> on mobile 🚀
             </p>
           )}
-          <div style={{ display: "flex", gap: 24, marginTop: 12, flexWrap: "wrap" }}>
-            <Column title="Original Framer" scores={result.before} dim />
-            <Column title="Your optimized site" scores={result.after} />
+          <div style={{ display: "flex", gap: 14, alignItems: "center", marginTop: 12, flexWrap: "wrap" }}>
+            <Card badge="Before" title="Original Framer" scores={result.before} variant="before" />
+            <span style={{ fontSize: 22, color: "var(--text-muted)", fontWeight: 600 }}>→</span>
+            <Card badge="After" title="Your optimized site" scores={result.after} variant="after" />
           </div>
-          <p style={{ margin: "12px 0 0", fontSize: 12, color: "var(--text-muted)" }}>
+          <p style={{ margin: "14px 0 0", fontSize: 12, color: "var(--text-muted)" }}>
             Measured {new Date(result.measuredAt).toLocaleString()}
           </p>
         </>

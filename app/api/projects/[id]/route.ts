@@ -30,47 +30,9 @@ export async function GET(
       siteName: project.siteName,
       stats: JSON.parse(project.stats),
       status: project.status,
-      autoSync: project.autoSync,
       isDeployed: !!project.netlifySiteId,
-      lastCheckedAt: project.lastCheckedAt,
-      lastSyncedAt: project.lastSyncedAt,
       createdAt: project.createdAt,
       updatedAt: project.updatedAt,
-    },
-  });
-}
-
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { id } = await params;
-  const project = await prisma.project.findFirst({
-    where: { id, userId: session.user.id },
-  });
-
-  if (!project) {
-    return NextResponse.json({ error: "Project not found" }, { status: 404 });
-  }
-
-  const body = await request.json();
-  const updated = await prisma.project.update({
-    where: { id },
-    data:
-      typeof body.autoSync === "boolean" ? { autoSync: body.autoSync } : {},
-  });
-
-  return NextResponse.json({
-    project: {
-      id: updated.id,
-      autoSync: updated.autoSync,
-      lastCheckedAt: updated.lastCheckedAt,
-      lastSyncedAt: updated.lastSyncedAt,
     },
   });
 }

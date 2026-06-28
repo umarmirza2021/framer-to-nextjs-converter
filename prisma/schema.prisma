@@ -38,11 +38,6 @@ model Project {
   cacheId        String?
   netlifySiteId  String?         // reuse the same Netlify site on every redeploy
   perfScores     String?         // cached before/after Lighthouse scores (JSON)
-  // Auto-sync: periodically re-check the Framer site and redeploy on change.
-  autoSync       Boolean         @default(false)
-  contentHash    String?         // fingerprint of the last-seen Framer HTML
-  lastCheckedAt  DateTime?       // last time we polled the source
-  lastSyncedAt   DateTime?       // last time content changed + we rebuilt
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   deployments    Deployment[]

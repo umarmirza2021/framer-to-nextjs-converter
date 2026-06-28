@@ -11,33 +11,28 @@ type Platform = "NETLIFY" | "VERCEL";
 /**
  * Re-convert a project from its source URL (Performance Mode) and deploy the
  * optimized static site to the user's connected host. Records a Deployment row
- * and persists the fresh files. Shared by the manual deploy route and the
- * auto-sync job so both behave identically.
+ * and persists the fresh files.
  */
 export async function runDeploy(
   project: Project,
   account: DeploymentAccount,
-  platform: Platform,
-  prebuiltFilesJson?: string
+  platform: Platform
 ): Promise<{ url: string; deploymentId: string }> {
   const deployment = await prisma.deployment.create({
     data: { projectId: project.id, platform, status: "BUILDING" },
   });
 
   try {
-    // Reuse a fresh build if the caller already produced one (the sync job does),
-    // otherwise regenerate from source so the deploy reflects the latest content.
-    // Fall back to stored files if a fresh conversion fails.
-    let filesJson = prebuiltFilesJson ?? project.filesJson;
-    if (!prebuiltFilesJson) {
-      try {
-        const optimized = await convertFramerToNextJs(project.framerUrl, {
-          performanceMode: true,
-        });
-        filesJson = serializeFiles(optimized.files);
-      } catch {
-        // keep stored filesJson
-      }
+    // Regenerate from source so the deploy reflects the latest content and
+    // self-hosts optimized assets. Fall back to stored files if it fails.
+    let filesJson = project.filesJson;
+    try {
+      const optimized = await convertFramerToNextJs(project.framerUrl, {
+        performanceMode: true,
+      });
+      filesJson = serializeFiles(optimized.files);
+    } catch {
+      // keep stored filesJson
     }
 
     let url: string;
