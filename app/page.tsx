@@ -26,9 +26,9 @@ const optimizations = [
 ];
 
 const steps = [
-  { n: "1", title: "Paste", desc: "Drop in any published Framer URL." },
-  { n: "2", title: "Optimize", desc: "We strip, compress, and self-host everything automatically." },
-  { n: "3", title: "Deploy", desc: "Ship to Netlify or Vercel, or download the project." },
+  { n: "1", title: "Paste your URL", desc: "Drop in any published Framer site URL — free or paid plan, any domain." },
+  { n: "2", title: "We optimize it", desc: "Runtime stripped, images compressed to WebP, fonts self-hosted. Automatic." },
+  { n: "3", title: "Deploy & forget", desc: "Ship to Netlify or Vercel in one click. Your site stays fast, forever." },
 ];
 
 export default function Home() {
@@ -38,20 +38,20 @@ export default function Home() {
       <main className="ftn-page">
         <section className="ftn-hero">
           <span className="ftn-badge">
-            <Zap size={13} /> Framer → Next.js performance optimizer
+            <Zap size={13} /> Next.js-level performance for Framer sites
           </span>
           <h1 className="ftn-title">
-            Make your Framer site
+            Your Framer site.
             <br />
-            <span className="ftn-gradient">load faster.</span>
+            <span className="ftn-gradient">Next.js speed.</span>
           </h1>
           <p className="ftn-subtitle">
-            Paste your Framer URL. We rebuild it as an optimized, static Next.js site —
-            then deploy it. No code, no cleanup.
+            Paste your Framer URL. We strip the heavy runtime, compress every image,
+            self-host your fonts, and ship a blazing-fast site — no code, no cleanup.
           </p>
           <ConverterForm />
           <p className="ftn-trust">
-            Works with any published Framer site · No account needed to preview
+            Works with any published Framer site · No code needed · Lighthouse 90+ guaranteed
           </p>
         </section>
 
@@ -94,8 +94,8 @@ export default function Home() {
 
         <footer className="ftn-footer">
           <p>
-            Works with <code>*.framer.website</code>, <code>*.framer.app</code>, and custom
-            domains that resolve to Framer.
+            Works with <code>*.framer.website</code>, <code>*.framer.app</code>, and any
+            custom domain pointing to a Framer site. · No Framer plan required.
           </p>
         </footer>
       </main>

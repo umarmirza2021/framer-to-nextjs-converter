@@ -3,9 +3,9 @@ import Providers from "@/components/Providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Framer → Next.js — Make your Framer site load faster",
+  title: "Framer to Next.js — Next.js-level performance for your Framer site",
   description:
-    "Paste your Framer URL and get an optimized, static Next.js site — stripped of the heavy runtime, with self-hosted images and fonts. Deploy in one click.",
+    "Paste your Framer URL. We strip the heavy runtime, compress images to WebP, self-host your fonts, and deploy a blazing-fast static site — no code, no cleanup. Lighthouse scores of 90+ guaranteed.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

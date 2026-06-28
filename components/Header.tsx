@@ -8,7 +8,7 @@ export default async function Header() {
   return (
     <header className="ftn-header">
       <Link href="/" className="ftn-logo">
-        Framer → <span>Next.js</span>
+        Framer → <span>Next.js Speed</span>
       </Link>
       <nav className="ftn-nav">
         {session?.user ? (

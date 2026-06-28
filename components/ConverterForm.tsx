@@ -202,9 +202,9 @@ export default function ConverterForm() {
         <div className="ftn-status-card">
           <div className="ftn-status-steps">
             <div className="ftn-step ftn-step--active">Fetching Framer site</div>
-            <div className="ftn-step ftn-step--active">Extracting styles &amp; HTML</div>
-            <div className="ftn-step">Downloading assets</div>
-            <div className="ftn-step">Generating Next.js project</div>
+            <div className="ftn-step ftn-step--active">Extracting styles &amp; assets</div>
+            <div className="ftn-step">Compressing images &amp; self-hosting fonts</div>
+            <div className="ftn-step">Building optimized static site</div>
           </div>
         </div>
       )}
